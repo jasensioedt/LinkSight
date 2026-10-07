@@ -232,8 +232,4 @@ python3 -m pytest tests/test_dynamic.py -v
 - [Nombre compañero] — [su usuario de GitHub]
 ---
  
-##  Licencia
- 
-Este proyecto se distribuye bajo licencia MIT para uso educativo.  
-Consulta el fichero `LICENSE` para más detalles.
  
