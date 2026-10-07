@@ -106,7 +106,7 @@ weakscan/
 │   ├── test_dynamic.py
 │   └── test_static.py
 │
-└── reports/        ← generado localmente, no se sube a GitHub
+└── reports/
 ```
  
 ---
