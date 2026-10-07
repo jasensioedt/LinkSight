@@ -35,9 +35,9 @@ Todo el análisis se ejecuta desde un **servidor bastionado en DMZ** con acceso 
 [Administrador] ──SSH (clave pública)──▶ [Bastión DMZ]
                                                │
                                  ┌─────────────┴──────────────┐
-                                 │       VulnAuditor           │
+                                 │       VulnAuditor          │
                                  │  recon → dynamic → static  │
-                                 │       → llm → report        │
+                                 │       → llm → report       │
                                  └─────────────┬──────────────┘
                                                │  HTTP/HTTPS controlado
                                                ▼
