@@ -53,17 +53,17 @@ Todo el análisis se ejecuta desde un **servidor bastionado en DMZ** con acceso 
 ```
  
 ### Componentes
- 
+
 | Componente | Tecnología | Descripción |
 |---|---|---|
-| Bastión | Alpine Linux en Proxmox | Servidor mínimo en DMZ, solo puerto 22 |
-| Firewall | nftables | Entrada solo SSH, salida solo hacia objetivos autorizados |
-| Auditoría | auditd + syslog remoto | Logs de todas las sesiones y comandos |
-| Motor | Python 3.x | Módulos de análisis y generación de informes |
-| CVE lookup | OSV.dev API / NVD API | Detección de dependencias vulnerables |
-| LLM | Claude API / OpenAI API | Validación y propuesta de fixes (opcional) |
-| Informes | Markdown + pandoc/weasyprint | PDF profesional exportable |
- 
+| Bastión | Alpine Linux en Proxmox | Servidor mínimo en DMZ con acceso SSH restringido |
+| Firewall | iptables | Filtrado de tráfico de entrada y salida, permitiendo únicamente los accesos y destinos autorizados |
+| Auditoría | auditd + syslog remoto | Registro centralizado de sesiones, comandos y eventos de seguridad |
+| Motor | Python 3.11 | Orquestación del análisis, procesamiento de hallazgos y generación de informes |
+| Escáner | Nuclei | Detección automatizada de vulnerabilidades web y errores de configuración |
+| LLM | Ollama (Llama 3.2) | Análisis local de hallazgos y generación de recomendaciones técnicas |
+| Informes | Markdown + WeasyPrint | Generación automática de informes profesionales en PDF |
+
 ---
  
 ##  Estructura del proyecto
