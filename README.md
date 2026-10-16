@@ -1,4 +1,4 @@
-#  WeakScan
+#  LinkSight
  
 > Plataforma de auditoría de vulnerabilidades web con acceso bastionado.  
 > Detecta, analiza y reporta vulnerabilidades en aplicaciones web de forma automatizada, ejecutándose desde un servidor bastionado en DMZ para garantizar trazabilidad y seguridad operacional.
@@ -69,7 +69,7 @@ Todo el análisis se ejecuta desde un **servidor bastionado en DMZ** con acceso 
 ##  Estructura del proyecto
  
 ```
-weakscan/
+LinkSight/
 │
 ├── README.md
 ├── CHANGELOG.md
@@ -130,8 +130,8 @@ weakscan/
 ### 1. Clonar el repositorio
  
 ```bash
-git clone https://github.com/tu-usuario/weakscan.git
-cd weakscan
+git clone https://github.com/tu-usuario/LinkSight.git
+cd LinkSight
 ```
  
 ### 2. Instalar dependencias Python
