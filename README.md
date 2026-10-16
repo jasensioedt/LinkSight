@@ -9,15 +9,15 @@
  
 **Esta herramienta está diseñada exclusivamente para ser usada con autorización explícita y por escrito del propietario del sistema objetivo.**
  
-El uso de VulnAuditor contra sistemas sin autorización es ilegal y puede constituir un delito informático según el artículo 197 bis del Código Penal español. Los autores no se responsabilizan del uso indebido de esta herramienta.
+El uso de LinkSight contra sistemas sin autorización es ilegal y puede constituir un delito informático según el artículo 197 bis del Código Penal español. Los autores no se responsabilizan del uso indebido de esta herramienta.
  
 Antes de ejecutar cualquier análisis, el sistema exige un fichero de autorización firmado (`auth.json`). Sin él, la herramienta no arranca.
  
 ---
  
-##  ¿Qué es VulnAuditor?
+##  ¿Qué es LinkSight?
  
-VulnAuditor es una herramienta de auditoría de seguridad web que combina:
+LinkSight es una herramienta de auditoría de seguridad web que combina:
  
 - **Análisis de reconocimiento pasivo** — cabeceras HTTP, cookies, certificado TLS, versiones expuestas
 - **Análisis dinámico** — fuzzing automatizado de SQLi, XSS, path traversal y open redirect
@@ -35,7 +35,7 @@ Todo el análisis se ejecuta desde un **servidor bastionado en DMZ** con acceso 
 [Administrador] ──SSH (clave pública)──▶ [Bastión DMZ]
                                                │
                                  ┌─────────────┴──────────────┐
-                                 │       VulnAuditor          │
+                                 │       LinkSight          │
                                  │  recon → dynamic → static  │
                                  │       → llm → report       │
                                  └─────────────┬──────────────┘
