@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+
+# Entornos virtuales
+venv/
+.venv/
+
+# Variables sensibles
+.env
+
+# Logs
+*.log
+
+# Informes generados
+reports/*.pdf
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
