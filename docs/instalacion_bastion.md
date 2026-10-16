@@ -80,12 +80,14 @@ Con ello se instalaron las versiones más recientes disponibles para todos los p
 A continuación se instalaron las herramientas necesarias para la administración inicial del servidor y la futura ejecución de LinkSight:
 
 ```sh
-apk add nano git curl python3 py3-pip openssh iptables
+apk add nano sudo git curl python3 py3-pip openssh iptables
 ```
 
 ### Función de los paquetes instalados
+<br>
 
-- **nano**: editor de texto para modificar archivos de configuración.
+- **nano**: editor de texto utilizado para modificar archivos de configuración.
+- **sudo**: permite ejecutar comandos con privilegios administrativos.
 - **git**: gestión y descarga de repositorios.
 - **curl**: realización de peticiones HTTP desde la terminal.
 - **python3**: entorno de ejecución principal de LinkSight.
@@ -93,6 +95,7 @@ apk add nano git curl python3 py3-pip openssh iptables
 - **openssh**: acceso remoto seguro mediante SSH.
 - **iptables**: configuración de reglas de filtrado y control de tráfico de red.
 
+<br>
 ---
 
 ## Estado actual del despliegue
