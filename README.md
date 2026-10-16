@@ -141,9 +141,9 @@ LinkSight/
 ---
  
 ## 👥 Autores
- 
-- [Joel Asensio] — [jasensioedt]
-- [Aleix Nicolás] — [aleixnic]
+
+- **Joel Asensio Chavarría** (@jasensioedt)
+- **Aleix Nicolás** (@aleixnic)
 ---
  
  
