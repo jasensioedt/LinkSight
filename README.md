@@ -18,14 +18,14 @@ Antes de ejecutar cualquier análisis, el sistema exige un fichero de autorizaci
 ##  ¿Qué es LinkSight?
  
 LinkSight es una herramienta de auditoría de seguridad web que combina:
- 
-- **Análisis de reconocimiento pasivo** — cabeceras HTTP, cookies, certificado TLS, versiones expuestas
-- **Análisis dinámico** — fuzzing automatizado de SQLi, XSS, path traversal y open redirect
-- **Análisis estático** — inspección del código fuente mediante AST para detectar patrones peligrosos
-- **Lookup de CVEs** — cruce de dependencias contra OSV.dev y NVD
-- **Validación con LLM** — enriquecimiento de hallazgos con explicación del vector de ataque y fix técnico propuesto
-- **Generación de informes** — informe profesional en Markdown y PDF listo para entregar
-Todo el análisis se ejecuta desde un **servidor bastionado en DMZ** con acceso SSH restringido, logging exhaustivo y firewall de salida estricto.
+
+- **Reconocimiento pasivo** — análisis de cabeceras HTTP, cookies, certificados TLS y tecnologías expuestas
+- **Detección automatizada de vulnerabilidades** — análisis mediante Nuclei para identificar errores de configuración, exposiciones de información y vulnerabilidades conocidas
+- **Normalización de hallazgos** — procesamiento y unificación de resultados en un formato estándar
+- **Análisis mediante IA** — enriquecimiento de hallazgos con Ollama (Llama 3.2), incluyendo explicación del riesgo y recomendaciones de mitigación
+- **Generación de informes** — creación automática de informes técnicos en PDF listos para entregar al cliente
+
+Todo el análisis se ejecuta desde un **servidor bastionado en DMZ** con acceso SSH restringido, registro de auditoría y firewall de salida controlado.
  
 ---
  
@@ -35,21 +35,29 @@ Todo el análisis se ejecuta desde un **servidor bastionado en DMZ** con acceso 
 [Administrador] ──SSH (clave pública)──▶ [Bastión DMZ]
                                                │
                                  ┌─────────────┴──────────────┐
-                                 │       LinkSight          │
-                                 │  recon → dynamic → static  │
-                                 │       → llm → report       │
+                                 │         LinkSight          │
+                                 │                            │
+                                 │  Nuclei → Normalizador     │
+                                 │         → Ollama           │
+                                 │         → Reportes         │
                                  └─────────────┬──────────────┘
-                                               │  HTTP/HTTPS controlado
+                                               │
+                                      HTTP/HTTPS autorizado
+                                               │
                                                ▼
-                                     [Web objetivo (autorizada)]
+                                    [Web objetivo autorizada]
                                                │
-                                          Hallazgos JSON
+                                        Hallazgos JSON
                                                │
-                                          LLM API (opcional)
+                                               ▼
+                                    [Ollama (Llama 3.2)]
                                                │
-                                       Informe .md / .pdf
+                                     Análisis y fixes
                                                │
-                        ◀─── SCP / SFTP desde bastión ───[Administrador]
+                                               ▼
+                                      Informe PDF final
+                                               │
+                        ◀─── SCP / SFTP desde bastión ─── [Administrador]
 ```
  
 ### Componentes
@@ -75,36 +83,29 @@ LinkSight/
 ├── CHANGELOG.md
 ├── .gitignore
 ├── requirements.txt
-├── docker-compose.yml
 │
 ├── docs/
-│   ├── arquitectura.md
-│   ├── alcance.md
-│   ├── modelo-amenazas.md
-│   ├── hardening-checklist.md
-│   └── informe-template.md
 │
 ├── bastion/
 │   ├── setup.sh
 │   ├── sshd_config
-│   ├── nftables.conf
+│   ├── iptables.rules
 │   └── audit.rules
 │
-├── auditor/
+├── linksight/
 │   ├── __init__.py
 │   ├── cli.py
 │   ├── auth.py
-│   ├── recon.py
-│   ├── dynamic.py
-│   ├── static.py
-│   ├── cve_lookup.py
+│   ├── scanner.py
+│   ├── normalizer.py
 │   ├── llm_client.py
 │   └── reporter.py
 │
 ├── tests/
-│   ├── test_recon.py
-│   ├── test_dynamic.py
-│   └── test_static.py
+│   ├── test_scanner.py
+│   ├── test_normalizer.py
+│   ├── test_llm.py
+│   └── test_reporter.py
 │
 └── reports/
 ```
