@@ -98,6 +98,54 @@ apk add nano sudo git curl python3 py3-pip openssh iptables
 <br>
 ---
 
+## Creación del usuario administrativo
+
+Una vez terminada la instalación se creó un usuario administrativo para evitar utilizar la cuenta `root` durante el trabajo diario.
+
+```sh
+adduser joel
+```
+
+Después se añadió el usuario al grupo `wheel` para poder ejecutar tareas administrativas mediante `sudo`:
+
+```sh
+addgroup joel wheel
+```
+
+También se configuró `sudo` para permitir la elevación de privilegios cuando fuese necesario.
+
+---
+
+## Configuración del acceso SSH
+
+Para poder administrar el servidor de forma remota se configuró OpenSSH.
+
+Primero se generó un par de claves SSH en el equipo cliente mediante el algoritmo Ed25519:
+
+```powershell
+ssh-keygen -t ed25519 -f D:\JoelSSH\id_ed25519
+```
+
+La clave pública generada se añadió al servidor dentro del fichero:
+
+```text
+~/.ssh/authorized_keys
+```
+
+Después se aplicaron los permisos necesarios:
+
+```sh
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
+```
+
+Finalmente se comprobó el acceso remoto mediante SSH utilizando la clave privada generada.
+
+En este punto ya es posible administrar el bastión de forma remota utilizando el usuario `joel` sin necesidad de introducir una contraseña.
+
+---
+
+
 ## Estado actual del despliegue
 
 Hasta este punto se ha completado:
