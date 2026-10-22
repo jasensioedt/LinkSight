@@ -5,7 +5,7 @@
 
 | ID | Prioridad | Objetivo | Funcionalidad | Disparador | Fecha Entrega | Estado |
 | :--- | :---: | :--- | :--- | :--- | :---: | :---: |
-| ID0 | Alta | Registrar usuarios en la plataforma | Sistema de registro con nombre, apellidos, correo electrónico y contraseña almacenada de forma segura mediante hash. | Botón de registro en la esquina superior derecha. | 05/11/2026 | Pendiente |
+| ID0 | Alta | Registrar usuarios en la plataforma | Sistema de registro con nombre, apellidos, correo electrónico y contraseña almacenada de forma segura mediante hash. | Botón de registro en la esquina superior derecha. | ... | Pendiente |
 | ID1 | Alta | Iniciar sesión de forma segura | Inicio de sesión mediante correo y contraseña, sesiones seguras y limitación de intentos de acceso. | Botón de inicio de sesión. | ...| Pendiente |
 | ID2 | Media | Gestionar el perfil de usuario | Modificación de datos personales, cambio de contraseña y gestión de la cuenta. | Menú de perfil del usuario. | ... | Pendiente |
 | ID3 | Baja | Seleccionar idioma de la interfaz | Permitir cambiar el idioma de la aplicación y guardar la preferencia del usuario. | Selector de idioma de la interfaz. | ... | Pendiente |
