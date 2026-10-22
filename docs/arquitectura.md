@@ -1,20 +1,57 @@
+# Arquitectura de Red
+
+```text
+                           ┌───────────────┐
+                           │ Casa (NetBird)│
+                           └───────┬───────┘
+                                   │
+                                   ▼
+                             ┌─────────┐
+                             │   BKP2  │
+                             └────┬────┘
+                                  │
+                                  ▼
+                           ┌────────────┐
+                           │ Firewall   │
+                           │ Instituto  │
+                           └─────┬──────┘
+                                 │
+                                 ▼
+                           ┌────────────┐
+                           │   Switch   │
+                           └─────┬──────┘
+                                 │
+                  ┌──────────────┴──────────────┐
+                  │                             │
+                  ▼                             ▼
+            ┌───────────┐                 ┌───────────┐
+            │  Proxmox  │                 │ PC Clase  │
+            └─────┬─────┘                 └───────────┘
+                  │
+                  ▼
+            ┌────────────┐
+            │ Firewall   │
+            │  iptables  │
+            └─────┬──────┘
+                  │
+                  ▼
+            ┌────────────┐
+            │    DMZ     │
+            │ DHCP + IDS │
+            └─────┬──────┘
+                  │
+                  ▼
+            ┌────────────┐
+            │  Bastión   │
+            │ Alpine     │
+            └─────┬──────┘
+                  │
+      ┌───────────┼───────────┬───────────┬───────────┬
+      │           │           │           │           │
+      ▼           ▼           ▼           ▼           ▼
+   ┌─────┐     ┌─────┐     ┌─────┐     ┌─────┐     ┌─────┐
+   │ FTP │     │ DNS │     │ WEB │     │  BD │     │ BKP │
+   └─────┘     └─────┘     └─────┘     └─────┘     └─────┘
 ```
-[Administrador] ──SSH (clave pública)──▶ [Bastión DMZ]
-                                               │
-                                ┌──────────────┴───────────────┐
-                                │         VulnAuditor          │
-                                │  recon → dynamic → static    │
-                                │       → llm → report         │
-                                └──────────────┬───────────────┘
-                                               │ HTTP/HTTPS controlado
-                                               ▼
-                                  [Web objetivo (autorizada)]
-                                               │
-                                         Hallazgos JSON
-                                               │
-                                       LLM API (opcional)
-                                               │
-                                        Informe .md / .pdf
-                                               │
-[Administrador] ◀── SCP / SFTP desde bastión ──┘
-```
+
+
