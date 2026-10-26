@@ -1,11 +1,5 @@
 # Arquitectura del Software – LinkSight
 
-| **Datos de la Práctica** | **Arquitectura del Software**                                      |
-|--------------------------|--------------------------------------------------------------------|
-| **Módulo**               | M0379 / Proyecto                                                   |
-| **Ciclo Formativo**      | ASIX2º                                                             |
-| **Alumno**               | Aleix                                                              |
-| **Formato de Entrega**   | URL al informe documentado en Gitbook / GitHub / Notion compartido |
 
 **Objetivos**
 
@@ -63,7 +57,7 @@ Siguiendo la plantilla a continuación, completa la matriz de requisitos y funci
 | ID11   | Media         | Conservar el historial de análisis                   | Listado paginado de análisis anteriores por usuario con estado, fecha y objetivo.                                                                                               | Opción «Historial» del menú lateral                           | 07/01/2027        | Pendiente  |
 | ID12   | Media         | Descargar informes                                   | Exportación del informe en PDF y Markdown almacenada en el servidor.                                                                                                            | Botón «Descargar informe»                                     | 21/01/2027        | Pendiente  |
 | ID13   | Baja          | Ver un panel resumen                                 | Dashboard con contadores de análisis, hallazgos por severidad y últimas actividades.                                                                                            | Carga de la página principal tras iniciar sesión              | 28/01/2027        | Pendiente  |
-| ID14   | Alta          | Proteger los datos y recuperarlos ante fallos        | Copias de seguridad diarias cifradas (BorgBackup) de la base de datos y el código en una VM aparte, con prueba de restauración.                                                 | Tarea programada (cron) diaria a las 03:00                    | 04/02/2027        | Pendiente  |
+| ID14   | Alta          | Proteger los datos y recuperarlos ante fallos        | Copias de seguridad diarias cifradas de la base de datos y el código en una VM aparte, con prueba de restauración.                                                 | Tarea programada (cron) diaria a las 03:00                    | 04/02/2027        | Pendiente  |
 | ID15   | Media         | Administrar usuarios y roles                         | Panel de administración para activar/desactivar cuentas y asignar roles (usuario, administrador).                                                                               | Opción «Administración» visible solo a administradores        | 11/02/2027        | Pendiente  |
 
 **Arquitectura del sistema**
