@@ -66,20 +66,6 @@ Siguiendo la plantilla a continuación, completa la matriz de requisitos y funci
 | ID14   | Alta          | Proteger los datos y recuperarlos ante fallos        | Copias de seguridad diarias cifradas (BorgBackup) de la base de datos y el código en una VM aparte, con prueba de restauración.                                                 | Tarea programada (cron) diaria a las 03:00                    | 04/02/2027        | Pendiente  |
 | ID15   | Media         | Administrar usuarios y roles                         | Panel de administración para activar/desactivar cuentas y asignar roles (usuario, administrador).                                                                               | Opción «Administración» visible solo a administradores        | 11/02/2027        | Pendiente  |
 
-**Leyenda**
-
-- Prioridad: Baja, Media o Alta (según el impacto en el MVP del proyecto).
-
-- Requisito: Qué necesita el cliente o usuario.
-
-- Funcionalidad: Cómo el software va a resolver esa necesidad.
-
-- Disparador: Acción (clic, carga de página, tarea programada) que inicia la función.
-
-- Estado: Activo, Pendiente o Cancelado.
-
-- Estado: Activo, pendiente o cancelado.
-
 **Arquitectura del sistema**
 
 Uno de los fundamentos de la arquitectura es la identificación de componentes: determinar las piezas clave o módulos que compondrán una aplicación web. Cada componente realiza funciones específicas y se integra con otros para lograr el conjunto completo de características.
@@ -93,16 +79,14 @@ Identifica el software, la versión a utilizar, el puerto de funcionamiento y el
 | **Hardware**                        | Servidor físico del aula (x86-64, virtualización VT-x), 16 GB RAM mínimo, 500 GB SSD | —                          | no                       | Aloja el hipervisor y todas las VM de LinkSight (web, BD, DNS/DHCP, copias, bastión, cliente).             | https://pve.proxmox.com/wiki/System_Requirements   |
 | **Sistema operativo**               | Debian GNU/Linux (libre) en todas las VM; hipervisor Proxmox VE                      | Debian 13 / Proxmox VE 8.x | no                       | Sistema libre, estable y mínimo; el bastión usa instalación minimal para reducir superficie de ataque.     | https://www.debian.org/doc/                        |
 | **Interfaz de usuario (Frontend)**  | HTML5, CSS3, JavaScript, Bootstrap                                                   | Bootstrap 5.3              | 443 (HTTPS)              | Web responsive: landing, login, registro, dashboard, nuevo análisis, historial, informe, ajustes y perfil. | https://getbootstrap.com/docs/5.3/                 |
-| **Lógica de negocio (Backend)**     | Python con Flask servido por Gunicorn                                                | Python 3.13 / Flask 3.1    | 8000 (local)             | Autenticación, gestión de análisis, orquestación del bastión, motor SAST/DAST y generación de informes.    | https://flask.palletsprojects.com/                 |
 | **Servidor web**                    | Nginx como proxy inverso con TLS                                                     | Nginx 1.26                 | 443 / 80 (redirige)      | Termina HTTPS en linksight.lan y reenvía a Gunicorn; cabeceras de seguridad.                               | https://nginx.org/en/docs/                         |
 | **Base de datos**                   | MySQL                                                                                | MySQL 8.4 LTS              | 3306 (solo desde VM-WEB) | Almacena usuarios, análisis, hallazgos, dependencias e informes. Escucha solo en 192.168.50.20.            | https://dev.mysql.com/doc/refman/8.4/en/           |
 | **Sistema gestor de base de datos** | MySQL Workbench / cliente mysql por SSH                                              | Workbench 8.0              | 3306 vía túnel SSH       | Administración y consultas del esquema desde el PC del administrador.                                      | https://dev.mysql.com/doc/workbench/en/            |
-| **Servicios de APIs**               | API REST interna; APIs externas OSV.dev, NVD 2.0 y API de LLM                        | REST/JSON · NVD API 2.0    | 443 (HTTPS)              | Consulta de CVE y dependencias y explicación y validación de hallazgos con IA.                             | https://nvd.nist.gov/developers/vulnerabilities    |
 | **DNS**                             | BIND9                                                                                | BIND 9.20                  | 53 (TCP/UDP)             | Resuelve linksight.lan en la red interna (VM-DNS-DHCP 192.168.50.2).                                       | https://bind9.readthedocs.io/                      |
 | **DHCP**                            | Kea DHCP                                                                             | Kea 2.6                    | 67 (UDP)                 | Reparte IP dinámicas .100–.200 al cliente y reserva las IP estáticas de los servidores.                    | https://kea.readthedocs.io/                        |
 | **Copias de seguridad**             | BorgBackup sobre SSH + mysqldump                                                     | Borg 1.4                   | 22 (SSH)                 | Copias diarias cifradas y deduplicadas de BD y código en VM-BACKUP (192.168.50.30).                        | https://borgbackup.readthedocs.io/                 |
 | **Bastión de análisis (DMZ)**       | Debian minimal, OpenSSH, fail2ban, auditd                                            | OpenSSH 10.0               | 22 (solo desde .50.10)   | Ejecuta los análisis contra webs objetivo aislado en la DMZ 192.168.60.0/24.                               | https://www.openssh.com/manual.html                |
-| **Cortafuegos**                     | UFW / nftables en cada VM y NAT en Proxmox                                           | UFW 0.36                   | —                        | Política por defecto denegar; DNAT 443 → 192.168.50.10; solo se abren los puertos necesarios.              | https://help.ubuntu.com/community/UFW              |
+| **Cortafuegos**                     |iptables en cada VM y NAT en Proxmox                                           | UFW 0.36                   | —                        | Política por defecto denegar; DNAT 443 → 192.168.50.10; solo se abren los puertos necesarios.              | https://help.ubuntu.com/community/UFW              |
 
 **Diagrama de la Base de Datos**
 
