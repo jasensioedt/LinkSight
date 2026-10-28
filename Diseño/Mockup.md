@@ -2,16 +2,12 @@
 
 Enlace al Figma: LinkSight en Figma Sites
 
-## Qué había que hacer
-
-En la actividad de diseño había que coger el wireframe y hacer el mockup en el mismo Figma, y también hacer un mapa de navegabilidad. Todas las pantallas son de tamaño escritorio (1920 × 1080). Arriba están los wireframes, que son los dibujos en gris, y debajo los mockups, que ya tienen colores y contenido. Así se ve la diferencia entre uno y otro.
-
-## Pasos que he seguido
+## Pasos que hemos seguido
 
 1. Primero cogí los wireframes que ya teníamos y dejé las páginas en el mismo orden y con los mismos nombres (`/dashboard`, `/historial`...), como salen en la lista de páginas de Figma.
 2. Luego elegí los colores y la letra (están explicados más abajo).
-3. Hice una cabecera y un menú de la izquierda que son iguales en todas las pantallas de dentro de la web.
-4. Al principio tenía barras blancas en los sitios donde iría el contenido. Las quité y puse textos y datos de ejemplo del proyecto: el bastión, Nuclei, las dependencias con OSV y NVD, las correcciones de la IA y los informes. Así el diseño se puede pasar a una página de verdad sin tener que inventar nada.
+3. Hicimos una cabecera y un menú de la izquierda que son iguales en todas las pantallas de dentro de la web.
+4. Al principio tenía barras blancas en los sitios donde iría el contenido. Las quitamos y puse textos y datos de ejemplo del proyecto: el bastión, Nuclei, las dependencias con OSV y NVD, las correcciones de la IA y los informes. Así el diseño se puede pasar a una página de verdad sin tener que inventar nada.
 5. Hice el mapa de navegabilidad.
 6. Al final añadí la página de perfil, a la que se entra pulsando el avatar de arriba a la derecha.
 
@@ -27,7 +23,7 @@ En la actividad de diseño había que coger el wireframe y hacer el mockup en el
 - **Letra:** una sola letra sin adornos (Inter) en todas las pantallas. Los títulos van en negrita y más grandes, y el resto en normal. Es una letra fácil de leer en tablas con muchos datos.
 - **Forma de las cosas:** tarjetas con las esquinas redondeadas y botones con las esquinas redondeadas, y siempre con espacio entre ellas para que no se vea agobiante.
 
-## Por qué lo he hecho así
+## Explicaciones
 
 - El mockup está debajo del wireframe para no perder el original y poder compararlos.
 - Los colores son los del logo para que la web parezca parte del proyecto.
@@ -83,5 +79,5 @@ Cada pantalla la hice como un SVG a partir de una plantilla con la cabecera y el
 
 ## Lo que se ha hecho después con el diseño
 
-- La base de datos: miré qué datos salen en cada pantalla y de ahí sacué 14 tablas (usuarios, análisis, hallazgos, informes, auditoría...).
+- La base de datos: miré qué datos salen en cada pantalla y de ahí saqué 14 tablas (usuarios, análisis, hallazgos, informes, auditoría...).
 - La actividad A3 de arquitectura: la web va en una máquina virtual y lanza los análisis por SSH en el bastión.
