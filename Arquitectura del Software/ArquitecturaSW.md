@@ -129,8 +129,9 @@ A continuación, se detalla el Checklist de Requisitos Imprescindibles que tu pr
 
 - Documentación: Presentar un Diagrama de Red detallado, diferenciando claramente los elementos físicos reales y los virtuales (IPs, subredes, interfaces).
 
-**Diagrama de red**
-´´´
+**Arquitectura de red**
+
+```text
                            ┌───────────────┐
                            │ Casa (NetBird)│
                            └───────┬───────┘
@@ -182,7 +183,7 @@ A continuación, se detalla el Checklist de Requisitos Imprescindibles que tu pr
    ┌─────┐     ┌─────┐     ┌─────┐     ┌─────┐     ┌─────┐
    │ FTP │     │ DNS │     │ WEB │     │  BD │     │ BKP │
    └─────┘     └─────┘     └─────┘     └─────┘     └─────┘
-   ´´´
+```
 
 ### **Seguridad**
 
