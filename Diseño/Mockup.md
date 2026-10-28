@@ -1,6 +1,6 @@
 # LinkSight  Documentación del diseño en Figma
 
-Enlace al Figma: LinkSight en Figma Sites
+Enlace al Figma: https://www.figma.com/site/eQaznZsxAILc1rt8asjn07/LinkSight?node-id=0-1&t=jA7PDI9LyOqfoAIy-1
 
 ## Pasos que hemos seguido
 
