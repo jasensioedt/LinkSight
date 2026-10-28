@@ -84,21 +84,7 @@ Identifica el software, la versión a utilizar, el puerto de funcionamiento y el
 
 **Diagrama de la Base de Datos**
 
-Tal y como hemos visto en la actividad de bases de datos, utilizamos diagramas Entidad-Relación (E-R) para planificar visualmente las tablas, campos, tipos de datos, relaciones (1:1, 1:N, N:M) y claves (Primary y Foreign Keys).
-
-**Instrucciones**
-
-- Adjunta el diagrama E-R de tu aplicación web. Para construirlo, reflexiona sobre lo siguiente:
-
-<!-- -->
-
-- ¿Qué datos son estrictamente necesarios para el funcionamiento de mi aplicación?
-
-- ¿Qué tipos de usuarios/roles voy a tener y qué datos recopilaré de ellos?
-
-- ¿Qué tipo de dato es el óptimo para cada campo? (Consulta la documentación oficial de MySQL).
-
-- ¿Están mis tablas normalizadas? ¿Están bien gestionadas las relaciones de cardinalidad N:M con tablas intermedias?
+Utilizamos diagramas Entidad-Relación (E-R) para planificar visualmente las tablas, campos, tipos de datos, relaciones (1:1, 1:N, N:M) y claves (Primary y Foreign Keys).
 
 ![Diagrama E-R](er.png)
 
@@ -148,13 +134,13 @@ A continuación, se detalla el Checklist de Requisitos Imprescindibles que tu pr
 
 | **Máquina**                  | **IP**                      | **Servicios / puertos**                        | **Red**               |
 |------------------------------|-----------------------------|------------------------------------------------|-----------------------|
-| Gateway / NAT (host Proxmox) | 192.168.50.1 · 192.168.60.1 | DNAT 443 → .50.10:443, UFW                     | vmbr0 / vmbr1 / vmbr2 |
-| VM-DNS-DHCP                  | 192.168.50.2                | BIND9 53 · Kea 67/udp                          | LAN                   |
-| VM-WEB                       | 192.168.50.10               | Nginx 443 · Gunicorn 8000                      | LAN                   |
-| VM-BD                        | 192.168.50.20               | MySQL 3306 (solo desde .10)                    | LAN                   |
-| VM-BACKUP                    | 192.168.50.30               | BorgBackup · SSH 22                            | LAN                   |
+| Gateway / NAT (host Proxmox) | 192.168.50.1 · 192.168.60.1 | DNAT 443                     | vmbr0 / vmbr1 / vmbr2 |
+| CT-DNS-DHCP                  | 192.168.50.2                | BIND9 53 · Kea 67/udp                          | LAN                   |
+| CT-WEB                       | 192.168.50.10               | Nginx 443                       | LAN                   |
+| CT-BD                        | 192.168.50.20               | MySQL 3306 (solo desde .10)                    | LAN                   |
+| CT-BACKUPS                    | 192.168.50.30               | BorgBackup · SSH 22                            | LAN                   |
 | VM-CLIENTE                   | DHCP .100–.200              | Navegador → https://linksight.lan              | LAN                   |
-| VM-BASTIÓN                   | 192.168.60.10               | SSH 22 (solo desde .50.10) · fail2ban · auditd | DMZ                   |
+| VM-BASTIÓN                   | 192.168.60.10               | SSH 22  · fail2ban · auditd | DMZ                   |
 
 ### 
 
@@ -169,13 +155,3 @@ A continuación, se detalla el Checklist de Requisitos Imprescindibles que tu pr
 • Acceso por SSH con clave pública (PasswordAuthentication no, PermitRootLogin no), fail2ban y auditd en el bastión.
 
 • Aplicación: HTTPS obligatorio, contraseñas con hash, consultas parametrizadas y copias de seguridad cifradas.
-
-## **Evaluación**
-
-La evaluación de esta fase se realizará de forma presencial en el aula. Se requerirá una demostración funcional de un "Hello world" operativo bajo la infraestructura diseñada.
-
-| 2p   | Satisfactorio   | Desde el navegador de una máquina de la red real se puede acceder mediante dominio personalizado a la web de prueba. |
-|------|-----------------|----------------------------------------------------------------------------------------------------------------------|
-| 1,5p | Bien            | Desde el navegador de una máquina virtual se puede acceder mediante dominio personalizado a la web de prueba.        |
-| 1p   | Necesita mejora | Desde el navegador de la máquina virtual se puede acceder a la web de prueba mediante dominio localhost.             |
-| 0p   | Insatisfactorio | No se cumple ningún requisito anteriormente mencionado o no se ha realizado a tiempo.                                |
