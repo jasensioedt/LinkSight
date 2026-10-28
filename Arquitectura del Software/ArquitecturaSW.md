@@ -87,9 +87,7 @@ Identifica el software, la versión a utilizar, el puerto de funcionamiento y el
 
 Utilizamos diagramas Entidad-Relación (E-R) para planificar visualmente las tablas, campos, tipos de datos, relaciones (1:1, 1:N, N:M) y claves (Primary y Foreign Keys).
 
-![Diagrama E-R](../img/diagrama_er.png)
-
-*Figura 1. Diagrama Entidad-Relación de LinkSight*
+![Diagrama E-R](img/diagrama_er.png)
 
 Normalización: el esquema cumple 3FN; cada tabla depende solo de su clave primaria y no hay datos repetidos (roles y módulos tienen su propia tabla).
 
@@ -98,8 +96,6 @@ Roles: la tabla roles (usuario, administrador) se relaciona 1:N con usuarios; el
 Cardinalidad N:M: un análisis puede ejecutar varios módulos (SAST, DAST, dependencias) y un módulo se usa en muchos análisis, resuelto con la tabla puente analisis_modulos.
 
 Datos y seguridad: contraseñas solo como password_hash, secreto TOTP, URL en VARCHAR(2048), severidad y estado como ENUM, claves foráneas con índices y consultas parametrizadas desde Flask para evitar inyección SQL.
-
-Nota: Puedes usar herramientas gráficas gratuitas como Draw.io, Microsoft Visio, Lucidchart o MySQL Workbench.
 
 ### **Desarrollo y Base de Datos**
 
