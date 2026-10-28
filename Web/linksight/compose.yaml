@@ -1,0 +1,38 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    mem_limit: 768m
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      DB_HOST: ${DB_HOST:?Define DB_HOST en .env}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-linksight}
+      DB_USER: ${DB_USER:?Define DB_USER en .env}
+      DB_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en .env}
+      APP_FORCE_HTTPS: ${APP_FORCE_HTTPS:-false}
+    expose:
+      - "80"
+    networks:
+      - linksight
+
+  frontend:
+    image: nginx:1.30.6-alpine
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    volumes:
+      - ./index.html:/usr/share/nginx/html/index.html:ro
+      - ./assets:/usr/share/nginx/html/assets:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - linksight
+
+networks:
+  linksight:
+    driver: bridge
