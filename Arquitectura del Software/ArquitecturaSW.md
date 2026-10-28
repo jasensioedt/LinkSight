@@ -60,6 +60,7 @@ Siguiendo la plantilla a continuación, completa la matriz de requisitos y funci
 | ID14 | Media | Gestión de vulnerabilidades detectadas | Mostrar información detallada del hallazgo, impacto, severidad y recomendación generada por IA. | Selección de una vulnerabilidad dentro de un informe. | ... | Pendiente |
 | ID15 | Media | Monitorización de análisis | Mostrar el estado de ejecución de los análisis (Pendiente, En ejecución, Completado o Error). | Página de historial o detalle del análisis. | ... | Pendiente |
 | ID16 | Baja | Auditoría de acciones | Registrar accesos, creación de análisis, descargas de informes y acciones administrativas. | Acciones realizadas por los usuarios. | ... | Pendiente |
+
 **Arquitectura del sistema**
 
 Uno de los fundamentos de la arquitectura es la identificación de componentes: determinar las piezas clave o módulos que compondrán una aplicación web. Cada componente realiza funciones específicas y se integra con otros para lograr el conjunto completo de características.
@@ -71,14 +72,14 @@ Identifica el software, la versión a utilizar, el puerto de funcionamiento y el
 | **Componente de sistema**           | **Tecnología o framework (elige de la lista o añade el que vayas a utilizar)**       | **Versión**                | **Puerto**               | **Descripción de uso o requisitos**                                                                        | **Enlace a documentación o información adicional** |
 |-------------------------------------|--------------------------------------------------------------------------------------|----------------------------|--------------------------|------------------------------------------------------------------------------------------------------------|----------------------------------------------------|
 | **Hardware**                        | Servidor físico del aula (x86-64, virtualización VT-x), 8 GB RAM , 93 GB SSD | —                          | -                       | Aloja el hipervisor y todas las VM de LinkSight (web, BD, DNS/DHCP, copias, bastión, cliente).             | https://pve.proxmox.com/wiki/System_Requirements   |
-| **Sistema operativo**               | Debian/Alpine en todos los CT y VM; hipervisor Proxmox VE                      | Debian 12 / Alpine linux / Proxmox VE 8.x | -                     | Sistema libre, estable y mínimo; el bastión usa instalación minimal para reducir superficie de ataque.     | https://www.debian.org/doc/                        |
+| **Sistema operativo** | Debian/Alpine en todos los CT y VM; TrueNAS para las copias; hipervisor Proxmox VE | Debian 12 / Alpine Linux / TrueNAS 25.10 / Proxmox VE 8.x | - | Sistemas libres y ligeros. TrueNAS se usa para guardar las copias. | https://www.debian.org/doc/ |
 | **Interfaz de usuario (Frontend)**  | HTML5, CSS3, JavaScript, Bootstrap                                                   | Bootstrap 5.3              | 443 (HTTPS)              | Web responsive: landing, login, registro, dashboard, nuevo análisis, historial, informe, ajustes y perfil. | https://getbootstrap.com/docs/5.3/                 |
 | **Servidor web**                    | Nginx como proxy inverso con TLS                                                     | Nginx 1.26                 | 443 / 80 (redirige)      | Termina HTTPS en linksight.lan y reenvía a Gunicorn; cabeceras de seguridad.                               | https://nginx.org/en/docs/                         |
-| **Base de datos** | MariaDB | MariaDB 11.8 LTS | 3306 (solo desde VM-WEB) | Almacena usuarios, análisis, hallazgos, dependencias e informes. | https://mariadb.com/kb/en/documentation/ |
+| **Base de datos** | MariaDB | MariaDB 11.8 LTS | 3306 | Guarda usuarios, análisis, hallazgos e informes. | https://mariadb.com/kb/en/documentation/ |
 | **Sistema gestor de base de datos** | DBeaver / cliente mariadb por SSH | DBeaver 24 | 3306 vía túnel SSH | Administración y consultas del esquema desde el PC del administrador. | https://dbeaver.com/docs/ |
 | **DNS**                             | BIND9                                                                                | BIND 9.20                  | 53 (TCP/UDP)             | Resuelve linksight.lan en la red interna (VM-DNS-DHCP 192.168.50.2).                                       | https://bind9.readthedocs.io/                      |
 | **DHCP**                            | Kea DHCP                                                                             | Kea 2.6                    | 67 (UDP)                 | Reparte IP dinámicas .100–.200 al cliente y reserva las IP estáticas de los servidores.                    | https://kea.readthedocs.io/                        |
-| **Copias de seguridad**             | BorgBackup sobre SSH + mysqldump                                                     | Borg 1.4                   | 22 (SSH)                 | Copias diarias cifradas y deduplicadas de BD y código en VM-BACKUP (192.168.50.30).                        | https://borgbackup.readthedocs.io/                 |
+| **Copias de seguridad** | BorgBackup, con TrueNAS como destino | Borg 1.4 / TrueNAS 25.10 | 22 (SSH) / 2049 (NFS) | Copias diarias cifradas de la base de datos y el código en VM-BACKUP (192.168.50.30), guardadas en TrueNAS. | https://www.truenas.com/docs/ |
 | **Bastión de análisis (DMZ)**       | Alpine, OpenSSH, fail2ban, auditd                                            | OpenSSH 10.0               | 22    | Ejecuta los análisis contra webs objetivo aislado en la DMZ 192.168.60.0/24.                               | https://www.openssh.com/manual.html                |
 | **Cortafuegos** | iptables (netfilter) con iptables-persistent, en un contenedor LXC | iptables 1.8 | — | Contenedor LXC en el servidor Proxmox que hace de router con iptables: MASQUERADE para dar salida a internet a las redes internas y DNAT 443. Política por defecto DROP en INPUT y FORWARD. En cada VM solo se abren los puertos necesarios. Reglas guardadas con netfilter-persistent. | https://www.netfilter.org/projects/iptables/ |
 
@@ -86,9 +87,9 @@ Identifica el software, la versión a utilizar, el puerto de funcionamiento y el
 
 Utilizamos diagramas Entidad-Relación (E-R) para planificar visualmente las tablas, campos, tipos de datos, relaciones (1:1, 1:N, N:M) y claves (Primary y Foreign Keys).
 
-![Diagrama E-R](er.png)
+![Diagrama E-R](../img/diagrama_er.png)
 
-*Figura 1. Diagrama Entidad-Relación de LinkSight (MySQL 8.4).*
+*Figura 1. Diagrama Entidad-Relación de LinkSight*
 
 Normalización: el esquema cumple 3FN; cada tabla depende solo de su clave primaria y no hay datos repetidos (roles y módulos tienen su propia tabla).
 
@@ -128,21 +129,8 @@ A continuación, se detalla el Checklist de Requisitos Imprescindibles que tu pr
 
 - Documentación: Presentar un Diagrama de Red detallado, diferenciando claramente los elementos físicos reales y los virtuales (IPs, subredes, interfaces).
 
-![Diagrama de red](net.png)
+**Diagrama de red**
 
-*Figura 2. Diagrama de red: elementos físicos (gris) y virtuales (color) en Proxmox VE.*
-
-| **Máquina**                  | **IP**                      | **Servicios / puertos**                        | **Red**               |
-|------------------------------|-----------------------------|------------------------------------------------|-----------------------|
-| Gateway / NAT (host Proxmox) | 192.168.50.1 · 192.168.60.1 | DNAT 443                     | vmbr0 / vmbr1 / vmbr2 |
-| CT-DNS-DHCP                  | 192.168.50.2                | BIND9 53 · Kea 67/udp                          | LAN                   |
-| CT-WEB                       | 192.168.50.10               | Nginx 443                       | LAN                   |
-| CT-BD                        | 192.168.50.20               | MariaDB 3306                   | LAN                   |
-| CT-BACKUPS                    | 192.168.50.30               | BorgBackup · SSH 22                            | LAN                   |
-| VM-CLIENTE                   | DHCP .100–.200              | Navegador → https://linksight.lan              | LAN                   |
-| VM-BASTIÓN                   | 192.168.60.10               | SSH 22  · fail2ban · auditd | DMZ                   |
-
-### 
 
 ### **Seguridad**
 
