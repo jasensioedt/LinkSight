@@ -130,7 +130,59 @@ A continuación, se detalla el Checklist de Requisitos Imprescindibles que tu pr
 - Documentación: Presentar un Diagrama de Red detallado, diferenciando claramente los elementos físicos reales y los virtuales (IPs, subredes, interfaces).
 
 **Diagrama de red**
-
+´´´
+                           ┌───────────────┐
+                           │ Casa (NetBird)│
+                           └───────┬───────┘
+                                   │
+                                   ▼
+                             ┌─────────┐
+                             │   BKP2  │
+                             └────┬────┘
+                                  │
+                                  ▼
+                           ┌────────────┐
+                           │ Firewall   │
+                           │ Instituto  │
+                           └─────┬──────┘
+                                 │
+                                 ▼
+                           ┌────────────┐
+                           │   Switch   │
+                           └─────┬──────┘
+                                 │
+                  ┌──────────────┴──────────────┐
+                  │                             │
+                  ▼                             ▼
+            ┌───────────┐                 ┌───────────┐
+            │  Proxmox  │                 │ PC Clase  │
+            └─────┬─────┘                 └───────────┘
+                  │
+                  ▼
+            ┌────────────┐
+            │ Firewall   │
+            │  iptables  │
+            └─────┬──────┘
+                  │
+                  ▼
+            ┌────────────┐
+            │    DMZ     │
+            │ DHCP + IDS │
+            └─────┬──────┘
+                  │
+                  ▼
+            ┌────────────┐
+            │  Bastión   │
+            │ Alpine     │
+            └─────┬──────┘
+                  │
+      ┌───────────┼───────────┬───────────┬───────────┬
+      │           │           │           │           │
+      ▼           ▼           ▼           ▼           ▼
+   ┌─────┐     ┌─────┐     ┌─────┐     ┌─────┐     ┌─────┐
+   │ FTP │     │ DNS │     │ WEB │     │  BD │     │ BKP │
+   └─────┘     └─────┘     └─────┘     └─────┘     └─────┘
+   ´´´
 
 ### **Seguridad**
 
