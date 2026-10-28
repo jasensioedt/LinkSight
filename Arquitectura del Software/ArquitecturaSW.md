@@ -180,15 +180,3 @@ A continuación, se detalla el Checklist de Requisitos Imprescindibles que tu pr
    │ FTP │     │ DNS │     │ WEB │     │  BD │     │ BKP │
    └─────┘     └─────┘     └─────┘     └─────┘     └─────┘
 ```
-
-### **Seguridad**
-
-- **Firewall**: Implementar y configurar un cortafuegos (UFW o IPTABLES). Aplicar el principio de mínimo privilegio (Ej: La base de datos solo debe aceptar conexiones entrantes desde la IP del Servidor Web, bloqueando el resto).
-
-- **Conexión segura**: Implementación de métodos de seguridad para el acceso al servidor (ej. SSH con claves) y protección en los scripts de llamada a la base de datos (prevención de inyecciones SQL, credenciales ocultas).
-
-• Reglas UFW: política por defecto «denegar entrada»; VM-WEB abre 443; VM-BD acepta 3306 solo desde 192.168.50.10; el bastión acepta SSH solo desde 192.168.50.10.
-
-• Acceso por SSH con clave pública (PasswordAuthentication no, PermitRootLogin no), fail2ban y auditd en el bastión.
-
-• Aplicación: HTTPS obligatorio, contraseñas con hash, consultas parametrizadas y copias de seguridad cifradas.
