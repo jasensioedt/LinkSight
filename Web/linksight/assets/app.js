@@ -42,22 +42,34 @@
   const stateLabel = value => ({pendiente:'Pendiente',en_curso:'En curso',completado:'Completado',fallido:'Fallido'}[value] || value || '—');
   const severityLabel = value => ({critica:'Crítica',alta:'Alta',media:'Media',baja:'Baja'}[value] || value || '—');
   const prettyDate = value => value ? new Intl.DateTimeFormat('es-ES',{dateStyle:'medium',timeStyle:'short'}).format(new Date(String(value).replace(' ','T'))) : '—';
+  async function parseApiResponse(response) {
+    const responseText=await response.text();
+    let result;
+    try { result=JSON.parse(responseText); }
+    catch {
+      const phpSource=responseText.trimStart().startsWith('<?php');
+      throw new Error(phpSource
+        ? 'La ruta /api está devolviendo el archivo PHP sin ejecutarlo. Comprueba que Nginx use nginx/default.conf y reenvíe /api/ al contenedor api; después recrea los servicios.'
+        : 'La API devolvió una respuesta que no es JSON.');
+    }
+    if (result.csrf) csrfToken=result.csrf;
+    if (!response.ok || result.ok===false) {
+      const error=new Error(result.error||'No se pudo completar la operación.');
+      error.status=response.status;
+      throw error;
+    }
+    return result;
+  }
   async function api(action, {method='GET', body=null, query=''}={}) {
     if (method !== 'GET' && !csrfToken) {
-      const seed = await fetch('/api/index.php?action=csrf',{credentials:'same-origin'}).then(r=>r.json());
+      const seed = await parseApiResponse(await fetch('/api/index.php?action=csrf',{credentials:'same-origin'}));
       csrfToken = seed.csrf || '';
     }
     const headers = {'Accept':'application/json'};
     if (body !== null) headers['Content-Type']='application/json';
     if (method !== 'GET') headers['X-CSRF-Token']=csrfToken;
     const response=await fetch(`/api/index.php?action=${encodeURIComponent(action)}${query}`,{method,headers,credentials:'same-origin',body:body===null?undefined:JSON.stringify(body)});
-    const responseText=await response.text();
-    let result;
-    try { result=JSON.parse(responseText); }
-    catch { result={ok:false,error:responseText.trimStart().startsWith('<?php')?'Nginx está entregando PHP sin ejecutarlo. Configura PHP-FPM para /api/index.php y recarga Nginx.':'La API devolvió una respuesta que no es JSON.'}; }
-    if (result.csrf) csrfToken=result.csrf;
-    if (!response.ok || result.ok===false) { const error=new Error(result.error||'No se pudo completar la operación.');error.status=response.status;throw error; }
-    return result;
+    return parseApiResponse(response);
   }
   function showError(error){
     const message=String(error?.message||'');
