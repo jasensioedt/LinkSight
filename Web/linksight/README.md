@@ -9,7 +9,7 @@ Despliegue para la topología actual de Proxmox:
 
 ## Preparar MariaDB
 
-Importa una sola vez `database/init/001-schema.sql` en el CT de base de datos si todavía no has creado las tablas. El SQL original está conservado en `database/source-schema.sql`; no lo importes además del esquema adaptado.
+Importa una sola vez `database/init/001-schema.sql` en el CT de base de datos si todavía no has creado las tablas. En una instalación existente, aplica también `database/init/002-profile-drafts-demo.sql` una sola vez; añade las notas de análisis y las tablas de borradores e informes simulados. En una base nueva, importa ambos archivos en orden. El SQL original está conservado en `database/source-schema.sql`; no lo importes además del esquema adaptado.
 
 En MariaDB crea un usuario limitado al host Docker `10.10.10.2`. Usa como contraseña el valor de `DB_PASSWORD` en `.env`:
 

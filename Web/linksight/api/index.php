@@ -146,6 +146,50 @@ function currentUser(PDO $pdo, int $userId): array {
     return $user;
 }
 
+function dashboardUrl(string $url): bool {
+    if (strlen($url) > 2048 || !filter_var($url, FILTER_VALIDATE_URL)) return false;
+    $parts = parse_url($url);
+    return is_array($parts) && in_array(strtolower((string)($parts['scheme'] ?? '')), ['http', 'https'], true)
+        && !isset($parts['user']) && !isset($parts['pass']);
+}
+
+function isAdmin(PDO $pdo, int $userId): bool {
+    return currentUser($pdo, $userId)['rol'] === 'administrador';
+}
+
+function validateDraftFindings(mixed $findings): array {
+    if (!is_array($findings) || count($findings) > 100) fail('La lista de hallazgos no es válida.');
+    $clean = [];
+    foreach ($findings as $item) {
+        if (!is_array($item)) fail('Cada hallazgo debe ser un objeto.');
+        $severity = (string)($item['severidad'] ?? '');
+        if (!in_array($severity, ['critica','alta','media','baja'], true)) fail('La severidad del hallazgo no es válida.');
+        $title = trim((string)($item['titulo'] ?? ''));
+        $recommendation = trim((string)($item['recomendacion'] ?? ''));
+        if ($title === '' || utf8Length($title) > 200 || utf8Length($recommendation) > 4000) fail('Revisa el título y la recomendación del hallazgo.');
+        $clean[] = ['severidad'=>$severity,'titulo'=>$title,'recomendacion'=>$recommendation];
+    }
+    return $clean;
+}
+
+function validateModules(mixed $modules): array {
+    $allowed = ['Inyección SQL','XSS (Cross-Site Scripting)','Path traversal','Open redirect','Dependencias (OSV y NVD)','Cabeceras de seguridad HTTP'];
+    if (!is_array($modules) || count($modules) > count($allowed)) fail('La selección de módulos no es válida.');
+    foreach ($modules as $module) if (!is_string($module) || !in_array($module, $allowed, true)) fail('La selección de módulos no es válida.');
+    return array_values(array_unique($modules));
+}
+
+function draftPayload(array $data): array {
+    $url = trim((string)($data['url'] ?? ''));
+    $type = (string)($data['type'] ?? 'completo');
+    $notes = trim((string)($data['notes'] ?? ''));
+    $progress = filter_var($data['progress'] ?? 0, FILTER_VALIDATE_INT);
+    if (!dashboardUrl($url)) fail('Introduce una URL válida con http o https.');
+    if (!in_array($type, ['estatico','dinamico','completo'], true)) fail('El tipo de análisis no es válido.');
+    if (utf8Length($notes) > 10000 || $progress === false || $progress < 0 || $progress > 100) fail('Las notas o el progreso no son válidos.');
+    return [$url, $type, validateModules($data['modules'] ?? []), validateDraftFindings($data['findings'] ?? []), $notes, $progress];
+}
+
 $action = $_GET['action'] ?? '';
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
@@ -231,6 +275,114 @@ $userId = requireUser();
 $pdo = db();
 $pdo->prepare('UPDATE sesiones SET ultimo_uso=NOW(),expira_en=DATE_ADD(NOW(),INTERVAL 14 DAY) WHERE id_sesion=? AND id_usuario=?')->execute([hash('sha256', session_id()), $userId]);
 
+if ($action === 'avatar' && $method === 'GET') {
+    $user = currentUser($pdo, $userId);
+    $filename = (string)($user['avatar_ruta'] ?? '');
+    if (!preg_match('/^avatar_' . $userId . '_[a-f0-9]{32}\.(jpg|png|webp)$/', $filename)) fail('No hay foto de perfil.', 404);
+    $path = '/var/lib/linksight/uploads/' . $filename;
+    if (!is_file($path)) fail('No se encontró la foto de perfil.', 404);
+    $mime = ['jpg'=>'image/jpeg','png'=>'image/png','webp'=>'image/webp'][pathinfo($filename, PATHINFO_EXTENSION)];
+    header_remove('Content-Type'); header('Content-Type: ' . $mime); header('Cache-Control: private, max-age=300');
+    readfile($path); exit;
+}
+
+if ($action === 'avatar' && in_array($method, ['POST','DELETE'], true)) {
+    requireCsrf();
+    $user = currentUser($pdo, $userId);
+    $old = (string)($user['avatar_ruta'] ?? '');
+    if ($method === 'DELETE') {
+        $pdo->prepare('UPDATE usuarios SET avatar_ruta=NULL WHERE id_usuario=?')->execute([$userId]);
+        if (preg_match('/^avatar_' . $userId . '_[a-f0-9]{32}\.(jpg|png|webp)$/', $old)) @unlink('/var/lib/linksight/uploads/' . $old);
+        respond(['ok'=>true]);
+    }
+    $file = $_FILES['photo'] ?? null;
+    if (!is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || (int)$file['size'] < 1 || (int)$file['size'] > 2 * 1024 * 1024) fail('Selecciona una imagen JPG, PNG o WebP de hasta 2 MB.');
+    $finfo = new finfo(FILEINFO_MIME_TYPE); $mime = $finfo->file($file['tmp_name']);
+    $formats = ['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp'];
+    $image = @getimagesize($file['tmp_name']);
+    if (!isset($formats[$mime]) || !$image || $image['mime'] !== $mime) fail('El archivo no es una imagen JPG, PNG o WebP válida.');
+    $directory = '/var/lib/linksight/uploads';
+    if (!is_dir($directory) && !mkdir($directory, 0700, true) && !is_dir($directory)) fail('No se pudo preparar el almacenamiento de fotos.', 503);
+    $filename = 'avatar_' . $userId . '_' . bin2hex(random_bytes(16)) . '.' . $formats[$mime];
+    $path = $directory . '/' . $filename;
+    if (!move_uploaded_file($file['tmp_name'], $path)) fail('No se pudo guardar la foto de perfil.', 500);
+    chmod($path, 0600);
+    try { $pdo->prepare('UPDATE usuarios SET avatar_ruta=? WHERE id_usuario=?')->execute([$filename,$userId]); }
+    catch (Throwable $e) { @unlink($path); error_log('LinkSight avatar update failed: ' . $e->getMessage()); fail('No se pudo guardar la foto de perfil.',500); }
+    if (preg_match('/^avatar_' . $userId . '_[a-f0-9]{32}\.(jpg|png|webp)$/', $old)) @unlink($directory . '/' . $old);
+    respond(['ok'=>true,'avatar'=>'/api/index.php?action=avatar&v=' . rawurlencode($filename)]);
+}
+
+if ($action === 'drafts' && $method === 'GET') {
+    $admin = isAdmin($pdo, $userId);
+    $sql = 'SELECT d.id_borrador,d.id_usuario,d.url,d.tipo,d.notas,d.progreso,d.estado,d.id_analisis,d.creado_en,d.actualizado_en FROM borradores_analisis d' . ($admin ? '' : ' WHERE d.id_usuario=?') . ' ORDER BY d.actualizado_en DESC';
+    $q = $pdo->prepare($sql); $q->execute($admin ? [] : [$userId]); respond(['ok'=>true,'items'=>$q->fetchAll()]);
+}
+
+if ($action === 'drafts' && $method === 'POST') {
+    requireCsrf(); [$url,$type,$modules,$findings,$notes,$progress] = draftPayload(input());
+    $q = $pdo->prepare('INSERT INTO borradores_analisis (id_usuario,url,tipo,modulos,hallazgos,notas,progreso) VALUES (?,?,?,?,?,?,?)');
+    $q->execute([$userId,$url,$type,json_encode($modules,JSON_UNESCAPED_UNICODE),json_encode($findings,JSON_UNESCAPED_UNICODE),$notes,$progress]);
+    respond(['ok'=>true,'id'=>(int)$pdo->lastInsertId()],201);
+}
+
+if ($action === 'draft' && in_array($method, ['GET','PATCH','DELETE'], true)) {
+    if ($method !== 'GET') requireCsrf();
+    $id = filter_var($_GET['id'] ?? 0, FILTER_VALIDATE_INT); if (!$id || $id < 1) fail('Borrador no válido.');
+    $admin = isAdmin($pdo, $userId);
+    $q = $pdo->prepare('SELECT * FROM borradores_analisis WHERE id_borrador=?' . ($admin ? '' : ' AND id_usuario=?'));
+    $q->execute($admin ? [$id] : [$id,$userId]); $draft = $q->fetch(); if (!$draft) fail('No se encontró ese borrador.',404);
+    if ($method === 'GET') { $draft['modulos']=json_decode($draft['modulos'],true) ?: []; $draft['hallazgos']=json_decode($draft['hallazgos'],true) ?: []; respond(['ok'=>true,'draft'=>$draft]); }
+    if ($method === 'DELETE') { if ($draft['estado'] !== 'borrador') fail('Un borrador convertido no se puede eliminar.'); $pdo->prepare('DELETE FROM borradores_analisis WHERE id_borrador=?')->execute([$id]); respond(['ok'=>true]); }
+    if ($draft['estado'] !== 'borrador') fail('Este borrador ya se convirtió en análisis.',409);
+    $data = input();
+    if (($data['intent'] ?? '') === 'complete') {
+        if (empty($data['authorized'])) fail('Confirma que tienes autorización para analizar el sitio.');
+        $type=(string)$draft['tipo']; $url=(string)$draft['url']; $notes=(string)($draft['notas'] ?? ''); $modules=json_decode($draft['modulos'],true) ?: [];
+        $pdo->beginTransaction();
+        try {
+            $q=$pdo->prepare('INSERT INTO objetivos (id_usuario,url) VALUES (?,?)');$q->execute([$userId,$url]);$target=(int)$pdo->lastInsertId();
+            $q=$pdo->prepare('INSERT INTO autorizaciones (id_objetivo,id_usuario) VALUES (?,?)');$q->execute([$target,$userId]);$authorization=(int)$pdo->lastInsertId();
+            $code='A'.strtoupper(bin2hex(random_bytes(4)));
+            $q=$pdo->prepare("INSERT INTO analisis (codigo,id_usuario,id_autorizacion,tipo,estado,notas) VALUES (?,?,?,?,'pendiente',?)");$q->execute([$code,$userId,$authorization,$type,$notes]);$analysisId=(int)$pdo->lastInsertId();
+            if ($modules) {$marks=implode(',',array_fill(0,count($modules),'?'));$q=$pdo->prepare("SELECT id_modulo FROM modulos WHERE nombre IN ($marks)");$q->execute($modules);$add=$pdo->prepare('INSERT IGNORE INTO analisis_modulos (id_analisis,id_modulo) VALUES (?,?)');foreach($q->fetchAll(PDO::FETCH_COLUMN) as $module)$add->execute([$analysisId,$module]);}
+            $pdo->prepare("UPDATE borradores_analisis SET estado='convertido',progreso=100,id_analisis=? WHERE id_borrador=?")->execute([$analysisId,$id]); audit($pdo,$userId,'convertir_borrador',$analysisId);$pdo->commit();respond(['ok'=>true,'analysis_id'=>$analysisId]);
+        } catch(Throwable $e) {if($pdo->inTransaction())$pdo->rollBack();error_log('LinkSight draft conversion failed: '.$e->getMessage());fail('No se pudo terminar el borrador.',500);}
+    }
+    $existing=['url'=>$draft['url'],'type'=>$draft['tipo'],'modules'=>json_decode($draft['modulos'],true) ?: [],'findings'=>json_decode($draft['hallazgos'],true) ?: [],'notes'=>$draft['notas'],'progress'=>(int)$draft['progreso']];
+    [$url,$type,$modules,$findings,$notes,$progress] = draftPayload(array_merge($existing,$data));
+    $q=$pdo->prepare('UPDATE borradores_analisis SET url=?,tipo=?,modulos=?,hallazgos=?,notas=?,progreso=? WHERE id_borrador=?');$q->execute([$url,$type,json_encode($modules,JSON_UNESCAPED_UNICODE),json_encode($findings,JSON_UNESCAPED_UNICODE),$notes,$progress,$id]);respond(['ok'=>true]);
+}
+
+if ($action === 'demo-reports' && in_array($method, ['GET','POST'], true)) {
+    if (!isAdmin($pdo,$userId)) fail('Solo el administrador puede gestionar informes simulados.',403);
+    if ($method === 'GET') { $q=$pdo->query('SELECT d.id_informe_demo,d.url,d.fecha_analisis,d.resumen,d.creado_en,d.actualizado_en,u.nombre,u.apellidos FROM informes_demo d JOIN usuarios u ON u.id_usuario=d.id_usuario_generador ORDER BY d.creado_en DESC');$items=$q->fetchAll();foreach($items as &$item){$item['simulado']=true;}unset($item);respond(['ok'=>true,'items'=>$items]); }
+    requireCsrf();$data=input();$url=trim((string)($data['url']??''));$summary=trim((string)($data['summary']??''));$date=(string)($data['date']??date('Y-m-d H:i:s'));
+    if (!dashboardUrl($url)||$summary===''||utf8Length($summary)>10000||!strtotime($date)) fail('La URL, el resumen o la fecha del informe no son válidos.');
+    $findings=isset($data['findings'])?validateDraftFindings($data['findings']):[
+        ['severidad'=>'alta','titulo'=>'Cabecera de seguridad ausente (SIMULADO)','recomendacion'=>'Ejemplo: revisar la política de seguridad HTTP.'],
+        ['severidad'=>'media','titulo'=>'Dependencia desactualizada (SIMULADO)','recomendacion'=>'Ejemplo: verificar versiones y avisos de seguridad.']
+    ];
+    $q=$pdo->prepare('INSERT INTO informes_demo (id_usuario_generador,url,fecha_analisis,resumen,hallazgos) VALUES (?,?,?,?,?)');$q->execute([$userId,$url,date('Y-m-d H:i:s',strtotime($date)), $summary,json_encode($findings,JSON_UNESCAPED_UNICODE)]);respond(['ok'=>true,'id'=>(int)$pdo->lastInsertId()],201);
+}
+
+if ($action === 'demo-report' && in_array($method, ['GET','PATCH','DELETE'], true)) {
+    if (!isAdmin($pdo,$userId)) fail('Solo el administrador puede gestionar informes simulados.',403);
+    if ($method !== 'GET') requireCsrf();$id=filter_var($_GET['id']??0,FILTER_VALIDATE_INT);if(!$id||$id<1)fail('Informe simulado no válido.');
+    $q=$pdo->prepare('SELECT d.*,u.nombre generador_nombre,u.apellidos generador_apellidos FROM informes_demo d JOIN usuarios u ON u.id_usuario=d.id_usuario_generador WHERE d.id_informe_demo=?');$q->execute([$id]);$item=$q->fetch();if(!$item)fail('No se encontró ese informe simulado.',404);$item['hallazgos']=json_decode($item['hallazgos'],true)?:[];$item['simulado']=true;
+    if($method==='GET')respond(['ok'=>true,'report'=>$item]);if($method==='DELETE'){$pdo->prepare('DELETE FROM informes_demo WHERE id_informe_demo=?')->execute([$id]);respond(['ok'=>true]);}
+    $data=input();$url=trim((string)($data['url']??$item['url']));$summary=trim((string)($data['summary']??$item['resumen']));$date=(string)($data['date']??$item['fecha_analisis']);$findings=isset($data['findings'])?validateDraftFindings($data['findings']):$item['hallazgos'];
+    if(!dashboardUrl($url)||$summary===''||utf8Length($summary)>10000||!strtotime($date))fail('Los datos del informe simulado no son válidos.');
+    $q=$pdo->prepare('UPDATE informes_demo SET url=?,fecha_analisis=?,resumen=?,hallazgos=? WHERE id_informe_demo=?');$q->execute([$url,date('Y-m-d H:i:s',strtotime($date)),$summary,json_encode($findings,JSON_UNESCAPED_UNICODE),$id]);respond(['ok'=>true]);
+}
+
+if ($action === 'reports' && $method === 'GET') {
+    $admin=isAdmin($pdo,$userId);$sql="SELECT a.id_analisis id,a.codigo,o.url,a.tipo,a.estado,a.creado_en fecha,COUNT(h.id_hallazgo) hallazgos,0 simulado FROM analisis a JOIN autorizaciones au ON au.id_autorizacion=a.id_autorizacion JOIN objetivos o ON o.id_objetivo=au.id_objetivo LEFT JOIN hallazgos h ON h.id_analisis=a.id_analisis WHERE " . ($admin?'1=1':'(a.id_usuario=? OR au.id_usuario=?)') . ' GROUP BY a.id_analisis,a.codigo,o.url,a.tipo,a.estado,a.creado_en ORDER BY a.creado_en DESC';
+    $q=$pdo->prepare($sql);$q->execute($admin?[]:[$userId,$userId]);$items=$q->fetchAll();
+    if($admin){$q=$pdo->query("SELECT id_informe_demo id,CONCAT('DEMO-',id_informe_demo) codigo,url,'simulado' tipo,'demostracion' estado,fecha_analisis fecha,JSON_LENGTH(hallazgos) hallazgos,1 simulado FROM informes_demo ORDER BY fecha_analisis DESC");$items=array_merge($items,$q->fetchAll());}
+    usort($items,static fn($a,$b)=>strcmp((string)$b['fecha'],(string)$a['fecha']));respond(['ok'=>true,'items'=>$items]);
+}
+
 if ($action === 'dashboard' && $method === 'GET') {
     $role = currentUser($pdo, $userId)['rol'];
     $scope = $role === 'administrador' ? '1=1' : '(a.id_usuario=? OR au.id_usuario=?)';
@@ -288,11 +440,18 @@ if ($action === 'analysis' && $method === 'POST') {
 }
 
 if ($action === 'report' && $method === 'GET') {
+    if (isset($_GET['demo_id'])) {
+        if (!isAdmin($pdo,$userId)) fail('Solo el administrador puede consultar informes simulados.',403);
+        $demoId=filter_var($_GET['demo_id'],FILTER_VALIDATE_INT);if(!$demoId||$demoId<1)fail('Informe simulado no válido.');
+        $q=$pdo->prepare('SELECT d.*,u.nombre generador_nombre,u.apellidos generador_apellidos FROM informes_demo d JOIN usuarios u ON u.id_usuario=d.id_usuario_generador WHERE d.id_informe_demo=?');$q->execute([$demoId]);$demo=$q->fetch();if(!$demo)fail('No se encontró ese informe simulado.',404);$demo['hallazgos']=json_decode($demo['hallazgos'],true)?:[];$demo['simulado']=true;respond(['ok'=>true,'demo'=>$demo]);
+    }
     $id=(int)($_GET['id']??0);
-    $stmt=$pdo->prepare('SELECT a.id_analisis,a.codigo,o.url objetivo,a.tipo,a.estado,a.creado_en,a.finalizado_en FROM analisis a JOIN autorizaciones au ON au.id_autorizacion=a.id_autorizacion JOIN objetivos o ON o.id_objetivo=au.id_objetivo WHERE a.id_analisis=? AND a.id_usuario=?');
-    $stmt->execute([$id,$userId]);$analysis=$stmt->fetch();if(!$analysis)fail('No se encontró ese informe.',404);
+    $admin=isAdmin($pdo,$userId);
+    $stmt=$pdo->prepare('SELECT a.id_analisis,a.codigo,o.url objetivo,a.tipo,a.estado,a.creado_en,a.finalizado_en,a.notas FROM analisis a JOIN autorizaciones au ON au.id_autorizacion=a.id_autorizacion JOIN objetivos o ON o.id_objetivo=au.id_objetivo WHERE a.id_analisis=?' . ($admin?'':' AND (a.id_usuario=? OR au.id_usuario=?)'));
+    $stmt->execute($admin?[$id]:[$id,$userId,$userId]);$analysis=$stmt->fetch();if(!$analysis)fail('No se encontró ese informe.',404);
     $stmt=$pdo->prepare('SELECT h.id_hallazgo,h.severidad,h.archivo,h.linea,h.evidencia,h.estado,h.explicacion_ia,h.correccion_ia,t.nombre tipo,t.categoria FROM hallazgos h JOIN tipos_vulnerabilidad t ON t.id_tipo=h.id_tipo WHERE h.id_analisis=? ORDER BY FIELD(h.severidad,"critica","alta","media","baja"),h.id_hallazgo');$stmt->execute([$id]);$findings=$stmt->fetchAll();
-    respond(['ok'=>true,'analysis'=>$analysis,'findings'=>$findings]);
+    $stmt=$pdo->prepare('SELECT paquete,version,cve_id,cvss,fuente FROM dependencias WHERE id_analisis=? ORDER BY cvss DESC,paquete');$stmt->execute([$id]);$dependencies=$stmt->fetchAll();
+    respond(['ok'=>true,'analysis'=>$analysis,'findings'=>$findings,'dependencies'=>$dependencies]);
 }
 
 if ($action === 'settings' && $method === 'GET') {

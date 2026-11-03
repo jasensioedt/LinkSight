@@ -14,6 +14,8 @@ services:
       DB_USER: ${DB_USER:?Define DB_USER en .env}
       DB_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en .env}
       APP_FORCE_HTTPS: ${APP_FORCE_HTTPS:-false}
+    volumes:
+      - linksight_uploads:/var/lib/linksight/uploads
     expose:
       - "80"
     networks:
@@ -36,3 +38,6 @@ services:
 networks:
   linksight:
     driver: bridge
+
+volumes:
+  linksight_uploads:
