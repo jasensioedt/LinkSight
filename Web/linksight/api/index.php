@@ -232,17 +232,23 @@ $pdo = db();
 $pdo->prepare('UPDATE sesiones SET ultimo_uso=NOW(),expira_en=DATE_ADD(NOW(),INTERVAL 14 DAY) WHERE id_sesion=? AND id_usuario=?')->execute([hash('sha256', session_id()), $userId]);
 
 if ($action === 'dashboard' && $method === 'GET') {
-    $q = $pdo->prepare("SELECT COUNT(*) total, SUM(estado='completado') completed, SUM(creado_en >= NOW()-INTERVAL 7 DAY) week_count, (SELECT COUNT(*) FROM hallazgos h JOIN analisis ah ON ah.id_analisis=h.id_analisis WHERE ah.id_usuario=? AND h.severidad='critica' AND h.estado='abierto') critical FROM analisis WHERE id_usuario=?");
-    $q->execute([$userId,$userId]); $counts = $q->fetch();
-    $q = $pdo->prepare("SELECT h.severidad,COUNT(*) total FROM hallazgos h JOIN analisis a ON a.id_analisis=h.id_analisis WHERE a.id_usuario=? AND a.creado_en>=NOW()-INTERVAL 30 DAY GROUP BY h.severidad");
-    $q->execute([$userId]); $severity = $q->fetchAll();
-    $q = $pdo->prepare("SELECT t.nombre,COUNT(*) total FROM hallazgos h JOIN analisis a ON a.id_analisis=h.id_analisis JOIN tipos_vulnerabilidad t ON t.id_tipo=h.id_tipo WHERE a.id_usuario=? GROUP BY t.id_tipo,t.nombre ORDER BY total DESC LIMIT 6");
-    $q->execute([$userId]); $types = $q->fetchAll();
-    $q = $pdo->prepare("SELECT a.id_analisis,a.codigo,o.url objetivo,a.tipo,a.estado,a.creado_en fecha,COUNT(h.id_hallazgo) hallazgos FROM analisis a JOIN autorizaciones au ON au.id_autorizacion=a.id_autorizacion JOIN objetivos o ON o.id_objetivo=au.id_objetivo LEFT JOIN hallazgos h ON h.id_analisis=a.id_analisis WHERE a.id_usuario=? GROUP BY a.id_analisis,a.codigo,o.url,a.tipo,a.estado,a.creado_en ORDER BY a.creado_en DESC LIMIT 5");
-    $q->execute([$userId]); $recent = $q->fetchAll();
-    $q = $pdo->prepare('SELECT COUNT(*) FROM dependencias d JOIN analisis a ON a.id_analisis=d.id_analisis WHERE a.id_usuario=?');
-    $q->execute([$userId]); $dependencyCount=(int)$q->fetchColumn();
-    respond(['ok'=>true,'counts'=>['completed'=>(int)$counts['completed'],'week'=>(int)$counts['week_count'],'critical'=>(int)$counts['critical'],'dependencies'=>$dependencyCount],'severity'=>$severity,'types'=>$types,'recent'=>$recent]);
+    $role = currentUser($pdo, $userId)['rol'];
+    $scope = $role === 'administrador' ? '1=1' : '(a.id_usuario=? OR au.id_usuario=?)';
+    $scopeParams = $role === 'administrador' ? [] : [$userId, $userId];
+    $q = $pdo->prepare("SELECT COUNT(DISTINCT a.id_analisis) FROM analisis a JOIN autorizaciones au ON au.id_autorizacion=a.id_autorizacion WHERE $scope");
+    $q->execute($scopeParams); $analysisCount = (int)$q->fetchColumn();
+    $q = $pdo->prepare("SELECT COUNT(*) FROM hallazgos h JOIN analisis a ON a.id_analisis=h.id_analisis JOIN autorizaciones au ON au.id_autorizacion=a.id_autorizacion WHERE $scope AND h.severidad='critica'");
+    $q->execute($scopeParams); $criticalCount = (int)$q->fetchColumn();
+    $q = $pdo->prepare("SELECT COUNT(*) FROM dependencias d JOIN analisis a ON a.id_analisis=d.id_analisis JOIN autorizaciones au ON au.id_autorizacion=a.id_autorizacion WHERE $scope");
+    $q->execute($scopeParams); $dependencyCount = (int)$q->fetchColumn();
+
+    $q = $pdo->prepare("SELECT h.severidad,COUNT(*) total FROM hallazgos h JOIN analisis a ON a.id_analisis=h.id_analisis JOIN autorizaciones au ON au.id_autorizacion=a.id_autorizacion WHERE $scope GROUP BY h.severidad");
+    $q->execute($scopeParams); $severity = $q->fetchAll();
+    $q = $pdo->prepare("SELECT t.nombre,COUNT(*) total FROM hallazgos h JOIN analisis a ON a.id_analisis=h.id_analisis JOIN autorizaciones au ON au.id_autorizacion=a.id_autorizacion JOIN tipos_vulnerabilidad t ON t.id_tipo=h.id_tipo WHERE $scope GROUP BY t.id_tipo,t.nombre ORDER BY total DESC LIMIT 6");
+    $q->execute($scopeParams); $types = $q->fetchAll();
+    $q = $pdo->prepare("SELECT a.id_analisis,a.codigo,o.url objetivo,a.tipo,a.estado,a.creado_en fecha,COUNT(h.id_hallazgo) hallazgos,CASE MIN(FIELD(h.severidad,'critica','alta','media','baja')) WHEN 1 THEN 'critica' WHEN 2 THEN 'alta' WHEN 3 THEN 'media' WHEN 4 THEN 'baja' ELSE NULL END severidad_max FROM analisis a JOIN autorizaciones au ON au.id_autorizacion=a.id_autorizacion JOIN objetivos o ON o.id_objetivo=au.id_objetivo LEFT JOIN hallazgos h ON h.id_analisis=a.id_analisis WHERE $scope GROUP BY a.id_analisis,a.codigo,o.url,a.tipo,a.estado,a.creado_en ORDER BY a.creado_en DESC LIMIT 5");
+    $q->execute($scopeParams); $recent = $q->fetchAll();
+    respond(['ok'=>true,'counts'=>['analyses'=>$analysisCount,'critical'=>$criticalCount,'dependencies'=>$dependencyCount],'severity'=>$severity,'types'=>$types,'recent'=>$recent]);
 }
 
 if ($action === 'history' && $method === 'GET') {
