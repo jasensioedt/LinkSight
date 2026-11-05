@@ -3,7 +3,7 @@
 ## 1. Qué queríamos hacer y qué montamos al final
 Al principio, la idea era meter TrueNAS SCALE en una máquina virtual. Sin embargo, como el servidor entero solo tiene **8 GB de RAM**, nos dimos cuenta de que meter Proxmox y TrueNAS juntos iba a hacer que el sistema se congelara y se apagara por falta de memoria (TrueNAS es un devorador de RAM).
 
-Para solucionarlo y no desperdiciar recursos, optamos por la mejor alternativa: **creamos un contenedor LXC con Debian** dedicado exclusivamente a gestionar las copias con **Rclone**. Este contenedor lo dejamos aislado del Proxmox principal, no ensucia el sistema base y consume **menos de 50 MB de RAM**, por lo que conseguimos que el servidor vaya totalmente sobrado.
+Para solucionarlo y no desperdiciar recursos, optamos por la mejor alternativa: **creamos un contenedor LXC con Debian** dedicado exclusivamente a gestionar las copias con **Rclone**. Este contenedor lo dejamos aislado del Proxmox principal, no ensucia el sistema base y consume **menos de 50 MB de RAM**, por lo que conseguimos que el servidor no se sature.
 
 ---
 
@@ -123,9 +123,9 @@ Programamos las tareas para que se hagan de madrugada: la copia de datos todos l
 |------|-------------|-------|
 | 02:00 cada dia | Backup de las máquinas "importantes" (Web/BD) a `/var/lib/vz/dump` | Interfaz web de Proxmox |
 | 03:00 cada dia | Copia de datos (base de datos y web) a `CopiasProxmox` | Crontab del contenedor |
-| 03:00 cada lunes | Backup de todas las máquinas a `/var/lib/vz/dump` | Interfaz web de Proxmox |
+| 04:00 cada lunes | Backup de todas las máquinas a `/var/lib/vz/dump` | Interfaz web de Proxmox |
 | 05:00 cada lunes | Subida de los backups de las máquinas a `CopiasCompletas` en MEGA | Crontab del contenedor |
 
 **El espacio en MEGA:** Al usar el comando `rclone sync`, el programa hace un espejo exacto. Cada lunes la subida machaca lo de la semana anterior. Nuestros backups completos del servidor comprimidos van a pesar entre **7 GB y 11 GB**, por lo que **nunca vamos a llenar los 20 GB** de MEGA porque los archivos viejos se van sustituyendo por los nuevos. La copia de datos ocupa muy poco.
 
-Nuestra primera prueba manual funcionó perfecta y ya subió **2,8MB** (archivos sql y web) a la cuenta, lo que nos demuestra que el puente, el router y la cuenta de MEGA están perfectamente sincronizados y listos.
+Nuestra primera prueba manual funcionó perfecta y ya subió **2,8MB** de archivos sql y web y **4,8GB** de copia completa, lo que nos demuestra que el puente, el router y la cuenta de MEGA están perfectamente sincronizados y listos.
