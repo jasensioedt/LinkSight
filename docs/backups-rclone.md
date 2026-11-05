@@ -9,9 +9,9 @@ Para solucionarlo y no desperdiciar recursos, optamos por la mejor alternativa: 
 
 ## 2. Cómo funciona nuestro diseño
 1. **El empaquetado:** Proxmox (programado desde la interfaz web) junta nuestras máquinas, las comprime en archivos súper ligeros `.zst` y los guarda en su carpeta local.
-2. **El puente:** Conectamos la carpeta de backups de Proxmox (`/var/lib/vz/dump`) directamente con nuestro contenedor en la ruta `/backups` usando el comando `pct set`. Así logramos que el contenedor lea los archivos directamente sin tener que duplicar espacio.
-3. **La subida:** El contenedor ejecuta `rclone` de madrugada, se conecta a internet y sube un espejo exacto de los archivos a nuestra cuenta de MEGA.
-4. **La copia de datos:** Además de las máquinas enteras, el contenedor `linksightBKP` hace cada noche una copia de los **datos**: un volcado de todas las bases de datos (servidor `10.10.10.3`) y una copia de la web (servidor `10.10.10.2`, carpeta `/var/www/html`). Esta copia ocupa muy poco y se sube a MEGA con histórico de 30 días.
+2. **El puente:** Conectamos la carpeta de backups de Proxmox (`/var/lib/vz/dump`) directamente con nuestro contenedor en la ruta `/backups_completo` usando el comando `pct set`. Así logramos que el contenedor lea los archivos directamente sin tener que duplicar espacio.
+3. **La subida:** El contenedor ejecuta `rclone` de madrugada, se conecta a internet y sube un espejo exacto de los archivos a nuestra cuenta de MEGA. Las copias completas de las máquinas se suben los lunes.
+4. **La copia de datos:** Además de las máquinas enteras, el contenedor `linksightBKP` hace cada noche una copia de los **datos**: un volcado de todas las bases de datos (servidor `10.10.10.3`) y una copia de la web (servidor `10.10.10.2`, carpeta `/var/www/html`). Esta copia ocupa muy poco y se sube a MEGA.
 
 ---
 
@@ -46,7 +46,7 @@ Desde el contenedor `linksightBKP` automatizamos la copia de los datos con un sc
 
 1. **Volcado de las bases de datos por red** con `mysqldump` (todas las bases, sin bloquear tablas gracias a `--single-transaction`).
 2. **Copia de la web** con `rsync` por SSH desde `10.10.10.2`.
-3. **Subida a MEGA** con `rclone`. Mantiene la copia actual en `CopiasProxmox/actual` y mueve lo que se sobrescribe o se borra a `CopiasProxmox/historico/AAAA-MM-DD`. Lo que tiene más de 30 días en el histórico se elimina para no llenar MEGA.
+3. **Subida a MEGA** con `rclone sync`, que deja la carpeta `CopiasProxmox` de MEGA como un espejo de la carpeta local `/root/backup_linksight/`.
 
 ```bash
 #!/bin/bash
@@ -72,25 +72,60 @@ Línea en el crontab del contenedor (`crontab -e`), todos los días a las 03:00 
 ```text
 0 3 * * * /root/backups.sh >> /var/log/backups.log 2>&1
 ```
+
 ---
 
-## 6. Cuándo se hacen las copias y cuánto espacio ocupan
-Programamos las tareas para que se hagan de madrugada todos los días, cubriendo cualquier posible pérdida de datos durante la semana. Para que no coincidan entre sí, las dejamos escalonadas:
+## 6. Copia completa de las máquinas (subida semanal a MEGA)
+
+Para tener también las **máquinas enteras** en MEGA, subimos los backups que genera Proxmox desde el puente con el contenedor, sin copiarlos antes a ningún sitio.
+
+**Montar el puente.** En el **host de Proxmox** (el contenedor `linksightBKP` es el 104):
+
+```bash
+pct set 104 -mp0 /var/lib/vz/dump,mp=/backups_completo
+pct reboot 104
+```
+
+El nombre de la ruta dentro del contenedor (`mp=`) se puede elegir; lo que no se cambia es `/var/lib/vz/dump`, que es donde Proxmox guarda los backups. Podemos comprobar que quedó bien con `pct config 104 | grep mp`.
+
+**Comprobar que el contenedor ve los backups.** Dentro de `linksightBKP`:
+
+```bash
+ls -lh /backups_completo
+```
+
+Deben aparecer los archivos `vzdump-*` (el backup `.zst`, su `.log` y su `.notes`).
+
+**Probar la subida antes de automatizarla.** Primero en simulación, para ver qué haría sin subir nada, y después de verdad:
+
+```bash
+rclone sync /backups_completo/ mega:CopiasCompletas --include "vzdump-*" --dry-run
+rclone sync /backups_completo/ mega:CopiasCompletas --include "vzdump-*" --progress
+rclone ls mega:CopiasCompletas
+```
+
+El filtro `--include "vzdump-*"` coincide también con los `.log` y `.notes`, así que los registros de cada backup también se suben a MEGA.
+
+**Automatizarlo.** Línea en el crontab del contenedor, solo los **lunes a las 05:00**:
+
+```text
+0 5 * * 1 rclone sync /backups_completo/ mega:CopiasCompletas --include "vzdump-*" >> /var/log/subida_mega.log 2>&1
+```
+
+Se programa a las 05:00 para que Proxmox haya terminado de escribir los archivos antes de que Rclone empiece a subirlos.
+
+---
+
+## 7. Cuándo se hacen las copias y cuánto espacio ocupan
+Programamos las tareas para que se hagan de madrugada: la copia de datos todos los días y la subida de las máquinas completas los lunes. Para que no coincidan entre sí, las dejamos escalonadas:
 
 | Hora | Qué se hace | Dónde |
 |------|-------------|-------|
 | 02:00 cada dia | Backup de las máquinas "importantes" (Web/BD) a `/var/lib/vz/dump` | Interfaz web de Proxmox |
 | 03:00 cada dia | Copia de datos (base de datos y web) a `CopiasProxmox` | Crontab del contenedor |
+| 03:00 cada lunes | Backup de todas las máquinas a `/var/lib/vz/dump` | Interfaz web de Proxmox |
 | 05:00 cada lunes | Subida de los backups de las máquinas a `CopiasCompletas` en MEGA | Crontab del contenedor |
 
-La subida se programa a las 05:00 para que Proxmox haya terminado de escribir los archivos antes de que Rclone empiece a subirlos. Línea en el crontab del contenedor:
-
-```text
-0 5 * * * rclone sync /backups/ mega:CopiasCompletas --include "vzdump-*" >> /var/log/subida_mega.log 2>&1
-```
-
-Como el filtro `vzdump-*` también coincide con los `.log` y `.notes` de cada backup, estos también se suben a MEGA.
-
-**El espacio en MEGA:** Al usar el comando `rclone sync`, el programa hace un espejo exacto. El jueves machaca lo del miércoles y el viernes lo del jueves. Nuestros backups completos del servidor comprimidos van a pesar entre **7 GB y 11 GB**, por lo que **nunca vamos a llenar los 20 GB** de MEGA porque los archivos viejos se van sustituyendo por los nuevos. La copia de datos ocupa muy poco, incluso con 30 días de histórico.
+**El espacio en MEGA:** Al usar el comando `rclone sync`, el programa hace un espejo exacto. Cada lunes la subida machaca lo de la semana anterior. Nuestros backups completos del servidor comprimidos van a pesar entre **7 GB y 11 GB**, por lo que **nunca vamos a llenar los 20 GB** de MEGA porque los archivos viejos se van sustituyendo por los nuevos. La copia de datos ocupa muy poco.
 
 Nuestra primera prueba manual funcionó perfecta y ya subió **2,8MB** (archivos sql y web) a la cuenta, lo que nos demuestra que el puente, el router y la cuenta de MEGA están perfectamente sincronizados y listos.
