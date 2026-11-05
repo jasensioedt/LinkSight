@@ -16,10 +16,10 @@ Para solucionarlo y no desperdiciar recursos, optamos por la mejor alternativa: 
 
 ## 3. Fallos que nos dieron en la terminal y cómo los arreglamos
 
-Durante la configuración en el contenedor `linksightBKP` nos surgieron unos cuantos errores típicos de la instalación, pero los fuimos cazando uno a uno en equipo:
+Durante la configuración en el contenedor `linksightBKP` nos surgieron unos cuantos errores típicos de la instalación:
 
 *   **Faltaba el descompresor:** El script oficial de Rclone se descarga en un archivo `.zip`. Como nuestro contenedor Debian viene totalmente limpio de fábrica, descubrimos que no tenía cómo abrirlo y nos saltó el aviso de que faltaba `unzip` o `7z`. Lo solucionamos instalando el descompresor nativo con: `apt install unzip -y`.
-*   **No aparecía MEGA en la lista:** Al hacer `rclone config`, MEGA no nos salía por ningún lado (ni escribiéndolo ni buscándolo). El problema era que la versión de Rclone que viene en los repositorios de Debian (`apt install`) es viejísima y viene recortada por temas de licencias. Tuvimos que borrarla (`apt purge`) e instalar la versión oficial desde el script de Rclone, que ya viene con el soporte de MEGA completo.
+*   **No aparecía MEGA en la lista:** Al hacer `rclone config`, MEGA no nos salía por ningún lado (ni escribiéndolo ni buscándolo). El problema era que la versión de Rclone que viene en los repositorios de Debian (`apt install`) es vieja y viene recortada por temas de licencias. Tuvimos que borrarla (`apt purge`) e instalar la versión oficial desde el script de Rclone, que ya viene con el soporte de MEGA completo.
 *   **Error "didn't find section in config file":** Al hacer la prueba de subida nos dio un error crítico diciendo que no encontraba la sección `mega_nube`. Fue simplemente un fallo al escribir el nombre del remoto en el asistente. Lo revisamos con `rclone listremotes` para ver cómo se había guardado y pudimos lanzar el comando bien.
 
 ---
@@ -33,14 +33,14 @@ Porque el tráfico de Rclone hacia MEGA es de **salida** (puerto 443 HTTPS). Com
 ---
 
 ## 5. Cuándo se hacen las copias y cuánto espacio ocupan
-Como el servidor solo lo usamos para clase los **miércoles y jueves**, programamos las tareas para que se hagan de madrugada esos días y el viernes, cubriendo cualquier posible pérdida de datos durante la semana:
+Programamos las tareas para que se hagan de madrugada todos los días, cubriendo cualquier posible pérdida de datos durante la semana:
 
-*   **En la web de Proxmox:** Programamos el backup automático para los **miércoles, jueves y viernes a las 02:00 AM**.
-*   **En la terminal del contenedor (Crontab):** Dejamos configurado Rclone para que recoja los archivos y los suba a MEGA los **miércoles, jueves y viernes a las 03:00 AM** con esta línea:
+*   **En la web de Proxmox:** Programamos el backup automático para **cada dia a las 03:00 AM**.
+*   **En la terminal del contenedor (Crontab):** Dejamos configurado Rclone para que recoja los archivos y los suba a MEGA los **cada dia a las 03:00 AM** con esta línea:
     ```text
-    0 3 * * 3,4,5 rclone sync /backups/ mega_nube:CopiasProxmox
+    
     ```
 
-**El espacio en MEGA:** Al usar el comando `rclone sync`, el programa hace un espejo exacto. El jueves machaca lo del miércoles y el viernes lo del jueves. Nuestros backups completos del servidor comprimidos van a pesar entre **7 GB y 11 GB**, por lo que **nunca vamos a llenar los 20 GB gratis** de MEGA porque los archivos viejos se van sustituyendo por los nuevos.
+**El espacio en MEGA:** Al usar el comando `rclone sync`, el programa hace un espejo exacto. El jueves machaca lo del miércoles y el viernes lo del jueves. Nuestros backups completos del servidor comprimidos van a pesar entre **7 GB y 11 GB**, por lo que **nunca vamos a llenar los 20 GB** de MEGA porque los archivos viejos se van sustituyendo por los nuevos.
 
-Nuestra primera prueba manual funcionó perfecta y ya subió **439 MB** a la cuenta, lo que nos demuestra que el puente, el router y la cuenta de MEGA están perfectamente sincronizados y listos.
+Nuestra primera prueba manual funcionó perfecta y ya subió **4,28GB** a la cuenta, lo que nos demuestra que el puente, el router y la cuenta de MEGA están perfectamente sincronizados y listos.
