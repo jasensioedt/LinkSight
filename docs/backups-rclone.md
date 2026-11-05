@@ -8,9 +8,10 @@ Para solucionarlo y no desperdiciar recursos, optamos por la mejor alternativa: 
 ---
 
 ## 2. Cómo funciona nuestro diseño
-1. **El empaquetado:** Proxmox (programado desde la interfaz web) junta nuestras 2 VMs y nuestros 2 LXCs, los comprime en archivos súper ligeros `.zst` y los guarda en su carpeta local.
+1. **El empaquetado:** Proxmox (programado desde la interfaz web) junta nuestras máquinas, las comprime en archivos súper ligeros `.zst` y los guarda en su carpeta local.
 2. **El puente:** Conectamos la carpeta de backups de Proxmox (`/var/lib/vz/dump`) directamente con nuestro contenedor en la ruta `/backups` usando el comando `pct set`. Así logramos que el contenedor lea los archivos directamente sin tener que duplicar espacio.
 3. **La subida:** El contenedor ejecuta `rclone` de madrugada, se conecta a internet y sube un espejo exacto de los archivos a nuestra cuenta de MEGA.
+4. **La copia de datos:** Además de las máquinas enteras, el contenedor `linksightBKP` hace cada noche una copia de los **datos**: un volcado de todas las bases de datos (servidor `10.10.10.3`) y una copia de la web (servidor `10.10.10.2`, carpeta `/var/www/html`). Esta copia ocupa muy poco y se sube a MEGA con histórico de 30 días.
 
 ---
 
@@ -20,7 +21,14 @@ Durante la configuración en el contenedor `linksightBKP` nos surgieron unos cua
 
 *   **Faltaba el descompresor:** El script oficial de Rclone se descarga en un archivo `.zip`. Como nuestro contenedor Debian viene totalmente limpio de fábrica, descubrimos que no tenía cómo abrirlo y nos saltó el aviso de que faltaba `unzip` o `7z`. Lo solucionamos instalando el descompresor nativo con: `apt install unzip -y`.
 *   **No aparecía MEGA en la lista:** Al hacer `rclone config`, MEGA no nos salía por ningún lado (ni escribiéndolo ni buscándolo). El problema era que la versión de Rclone que viene en los repositorios de Debian (`apt install`) es vieja y viene recortada por temas de licencias. Tuvimos que borrarla (`apt purge`) e instalar la versión oficial desde el script de Rclone, que ya viene con el soporte de MEGA completo.
-*   **Error "didn't find section in config file":** Al hacer la prueba de subida nos dio un error crítico diciendo que no encontraba la sección `mega_nube`. Fue simplemente un fallo al escribir el nombre del remoto en el asistente. Lo revisamos con `rclone listremotes` para ver cómo se había guardado y pudimos lanzar el comando bien.
+*   **`rsync: orden no encontrada`:** Al traer los archivos de la web con `rsync`, el error venía del servidor web (`10.10.10.2`), que no tenía `rsync` instalado. Lo solucionamos instalándolo ahí con `apt update && apt install -y rsync`.
+*   **`mysqldump: Access denied for user 'root'`:** El servidor de base de datos no permite que `root` se conecte desde otra IP. En lugar de abrir `root`, creamos un usuario `backup` con permisos solo de lectura, limitado a la IP del contenedor de backups:
+    ```sql
+    CREATE USER 'backup'@'10.10.10.10' IDENTIFIED BY 'CONTRASEÑA';
+    GRANT SELECT, SHOW VIEW, TRIGGER, LOCK TABLES, EVENT, PROCESS ON *.* TO 'backup'@'10.10.10.10';
+    FLUSH PRIVILEGES;
+    ```
+    También comprobamos que el servidor escucha por red (`bind-address` en la configuración de MariaDB) y reiniciamos el servicio con `systemctl restart mariadb`.
 
 ---
 
@@ -32,15 +40,57 @@ Porque el tráfico de Rclone hacia MEGA es de **salida** (puerto 443 HTTPS). Com
 
 ---
 
-## 5. Cuándo se hacen las copias y cuánto espacio ocupan
-Programamos las tareas para que se hagan de madrugada todos los días, cubriendo cualquier posible pérdida de datos durante la semana:
+## 5. Copia diaria de datos (base de datos y web)
 
-*   **En la web de Proxmox:** Programamos el backup automático para **cada dia a las 03:00 AM**.
-*   **En la terminal del contenedor (Crontab):** Dejamos configurado Rclone para que recoja los archivos y los suba a MEGA los **cada dia a las 03:00 AM** con esta línea:
-    ```text
-    
-    ```
+Desde el contenedor `linksightBKP` automatizamos la copia de los datos con un script, `/root/backups.sh`, que hace tres cosas seguidas:
 
-**El espacio en MEGA:** Al usar el comando `rclone sync`, el programa hace un espejo exacto. El jueves machaca lo del miércoles y el viernes lo del jueves. Nuestros backups completos del servidor comprimidos van a pesar entre **7 GB y 11 GB**, por lo que **nunca vamos a llenar los 20 GB** de MEGA porque los archivos viejos se van sustituyendo por los nuevos.
+1. **Volcado de las bases de datos por red** con `mysqldump` (todas las bases, sin bloquear tablas gracias a `--single-transaction`).
+2. **Copia de la web** con `rsync` por SSH desde `10.10.10.2`.
+3. **Subida a MEGA** con `rclone`. Mantiene la copia actual en `CopiasProxmox/actual` y mueve lo que se sobrescribe o se borra a `CopiasProxmox/historico/AAAA-MM-DD`. Lo que tiene más de 30 días en el histórico se elimina para no llenar MEGA.
 
-Nuestra primera prueba manual funcionó perfecta y ya subió **4,28GB** a la cuenta, lo que nos demuestra que el puente, el router y la cuenta de MEGA están perfectamente sincronizados y listos.
+```bash
+#!/bin/bash
+set -e
+
+mkdir -p /root/backup_linksight/db /root/backup_linksight/web
+
+mysqldump -h 10.10.10.3 -u backup -p'CONTRASEÑA' --all-databases --single-transaction --routines --events > /root/backup_linksight/db/todas_las_bases.sql
+
+rsync -avz --delete root@10.10.10.2:/var/www/html/ /root/backup_linksight/web/
+
+rclone sync /root/backup_linksight/ mega:CopiasProxmox
+```
+
+Detalles del script:
+
+*   **`set -e`:** si algún paso falla, el script se detiene. Así, si el volcado de la base de datos falla, no se sube nada a MEGA y no se pisa la copia buena que ya había.
+*   **Acceso sin contraseña:** para que `rsync` funcione desde cron, el contenedor entra por SSH al servidor web con clave (`ssh-keygen -t ed25519` y `ssh-copy-id root@10.10.10.2`).
+*   **Permisos:** `chmod +x /root/backups.sh`.
+
+Línea en el crontab del contenedor (`crontab -e`), todos los días a las 03:00 y guardando la salida en un log:
+
+```text
+0 3 * * * /root/backups.sh >> /var/log/backups.log 2>&1
+```
+---
+
+## 6. Cuándo se hacen las copias y cuánto espacio ocupan
+Programamos las tareas para que se hagan de madrugada todos los días, cubriendo cualquier posible pérdida de datos durante la semana. Para que no coincidan entre sí, las dejamos escalonadas:
+
+| Hora | Qué se hace | Dónde |
+|------|-------------|-------|
+| 02:00 cada dia | Backup de las máquinas "importantes" (Web/BD) a `/var/lib/vz/dump` | Interfaz web de Proxmox |
+| 03:00 cada dia | Copia de datos (base de datos y web) a `CopiasProxmox` | Crontab del contenedor |
+| 05:00 cada lunes | Subida de los backups de las máquinas a `CopiasCompletas` en MEGA | Crontab del contenedor |
+
+La subida se programa a las 05:00 para que Proxmox haya terminado de escribir los archivos antes de que Rclone empiece a subirlos. Línea en el crontab del contenedor:
+
+```text
+0 5 * * * rclone sync /backups/ mega:CopiasCompletas --include "vzdump-*" >> /var/log/subida_mega.log 2>&1
+```
+
+Como el filtro `vzdump-*` también coincide con los `.log` y `.notes` de cada backup, estos también se suben a MEGA.
+
+**El espacio en MEGA:** Al usar el comando `rclone sync`, el programa hace un espejo exacto. El jueves machaca lo del miércoles y el viernes lo del jueves. Nuestros backups completos del servidor comprimidos van a pesar entre **7 GB y 11 GB**, por lo que **nunca vamos a llenar los 20 GB** de MEGA porque los archivos viejos se van sustituyendo por los nuevos. La copia de datos ocupa muy poco, incluso con 30 días de histórico.
+
+Nuestra primera prueba manual funcionó perfecta y ya subió **2,8MB** (archivos sql y web) a la cuenta, lo que nos demuestra que el puente, el router y la cuenta de MEGA están perfectamente sincronizados y listos.
