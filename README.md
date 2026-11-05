@@ -30,8 +30,7 @@ El proyecto también incluye documentación sobre la arquitectura, el bastión y
 |---|---|
 | [Alcance de detección](./docs/alcance.md) | Qué tipos de problemas se plantea detectar y cuáles son sus limitaciones. |
 | [Arquitectura de red](./docs/arquitectura.md) | Esquema de la red y de los equipos del proyecto. |
-| [Arquitectura de software](./docs/arquitecturasw.md) | Funcionalidades previstas para la aplicación. |
-| [LinkSight Software](./docs/LinkSightSW.md) | Documentación del software. |
+| [LinkSight Software](./Arquitectura_SW/ArquitecturaSW.md) | Documentación del software. |
 | [Modelo de amenazas](./docs/amenazas.md) | Riesgos que se tienen en cuenta en el proyecto. |
 | [Instalación del bastión](./docs/instalacion_bastion.md) | Pasos para preparar el bastión. |
 | [Hardening](./docs/hardening.md) | Configuración de seguridad del sistema. |
