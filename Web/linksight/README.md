@@ -3,7 +3,7 @@
 Despliegue para la topología actual de Proxmox:
 
 - Host de Docker y Nginx: `10.10.10.2`
-- MariaDB externa: `192.168.111.49:3306`
+- MariaDB: `10.10.10.3:3306`
 - Nginx sirve el frontend en el puerto `8080` y envía `/api/` al contenedor PHP por la red privada de Compose.
 - El contenedor PHP no publica ningún puerto al exterior; se conecta directamente a MariaDB.
 
