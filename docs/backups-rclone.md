@@ -1,7 +1,7 @@
 # Informe del proyecto: Sistema de backups automatizados en MEGA
 
 ## 1. Qué queríamos hacer y qué montamos al final
-Al principio, la idea de nuestro equipo era meter TrueNAS SCALE en una máquina virtual. Sin embargo, como el servidor entero solo tiene **8 GB de RAM**, nos dimos cuenta de que meter Proxmox y TrueNAS juntos iba a hacer que el sistema se congelara y se apagara por falta de memoria (TrueNAS es un devorador de RAM).
+Al principio, la idea era meter TrueNAS SCALE en una máquina virtual. Sin embargo, como el servidor entero solo tiene **8 GB de RAM**, nos dimos cuenta de que meter Proxmox y TrueNAS juntos iba a hacer que el sistema se congelara y se apagara por falta de memoria (TrueNAS es un devorador de RAM).
 
 Para solucionarlo y no desperdiciar recursos, optamos por la mejor alternativa: **creamos un contenedor LXC con Debian** dedicado exclusivamente a gestionar las copias con **Rclone**. Este contenedor lo dejamos aislado del Proxmox principal, no ensucia el sistema base y consume **menos de 50 MB de RAM**, por lo que conseguimos que el servidor vaya totalmente sobrado.
 
