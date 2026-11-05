@@ -4,6 +4,14 @@
 > Detecta, analiza y reporta vulnerabilidades en aplicaciones web de forma automatizada, ejecutándose desde un servidor bastionado en DMZ para garantizar trazabilidad y seguridad operacional.
  
 ---
+
+## 📂 Documentación del Proyecto
+Aquí recopilamos las guías técnicas, informes de configuración e infraestructura que hemos implementado a lo largo del desarrollo:
+
+*   **[Guía de Backups Automatizados en la Nube (MEGA)](./docs/backups-rclone.md)** — Configuración del contenedor de backups, automatización con Rclone, troubleshooting de errores y gestión de reglas en el router.
+*   **[Manual de Bastionamiento de la DMZ](./docs/bastion-setup.md)**  — Configuración del servidor mínimo Alpine Linux, directivas de hardening para SSH y políticas restrictivas de iptables.
+
+---
  
 ##  Aviso legal
  
