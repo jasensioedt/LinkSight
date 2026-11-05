@@ -1,158 +1,87 @@
-#  LinkSight
- 
-> Plataforma de auditoría de vulnerabilidades web con acceso bastionado.  
-> Detecta, analiza y reporta vulnerabilidades en aplicaciones web de forma automatizada, ejecutándose desde un servidor bastionado en DMZ para garantizar trazabilidad y seguridad operacional.
- 
----
+<div align="center">
 
-## 📂 Documentación del Proyecto
-Aquí recopilamos las guías técnicas, informes de configuración e infraestructura que hemos implementado a lo largo del desarrollo:
+# 👋 ¡Hola! Soy Joel Asensio Chavarría
 
-*   **[Guía de Backups Automatizados en la Nube (MEGA)](./docs/backups-rclone.md)** — Configuración del contenedor de backups, automatización con Rclone, troubleshooting de errores y gestión de reglas en el router.
-*   **[Manual de Bastionamiento de la DMZ](./docs/bastion-setup.md)**  — Configuración del servidor mínimo Alpine Linux, directivas de hardening para SSH y políticas restrictivas de iptables.
+### Estudiante de Administración de Sistemas Informáticos en Red (ASIR)
 
----
- 
-##  Aviso legal
- 
-**Esta herramienta está diseñada exclusivamente para ser usada con autorización explícita y por escrito del propietario del sistema objetivo.**
- 
-El uso de LinkSight contra sistemas sin autorización es ilegal y puede constituir un delito informático según el artículo 197 bis del Código Penal español. Los autores no se responsabilizan del uso indebido de esta herramienta.
- 
-Antes de ejecutar cualquier análisis, el sistema exige un fichero de autorización firmado (`auth.json`). Sin él, la herramienta no arranca.
- 
----
- 
-##  ¿Qué es LinkSight?
- 
-LinkSight es una herramienta de auditoría de seguridad web que combina:
+[![GitHub](https://img.shields.io/badge/GitHub-jasensioedt-181717?style=for-the-badge&logo=github)](https://github.com/jasensioedt)
+[![Proyecto](https://img.shields.io/badge/Proyecto-LinkSight-2563EB?style=for-the-badge)](#)
+[![PHP](https://img.shields.io/badge/PHP-62.4%25-777BB4?style=for-the-badge&logo=php&logoColor=white)](#)
 
-- **Reconocimiento pasivo** — análisis de cabeceras HTTP, cookies, certificados TLS y tecnologías expuestas
-- **Detección automatizada de vulnerabilidades** — análisis mediante Nuclei para identificar errores de configuración, exposiciones de información y vulnerabilidades conocidas
-- **Normalización de hallazgos** — procesamiento y unificación de resultados en un formato estándar
-- **Análisis mediante IA** — enriquecimiento de hallazgos con Ollama (Llama 3.2), incluyendo explicación del riesgo y recomendaciones de mitigación
-- **Generación de informes** — creación automática de informes técnicos en PDF listos para entregar al cliente
+**Proyecto de auditoría de seguridad web y administración de sistemas.**
 
-Todo el análisis se ejecuta desde un **servidor bastionado en DMZ** con acceso SSH restringido, registro de auditoría y firewall de salida controlado.
- 
----
- 
-##  Arquitectura
- 
-```
-[Administrador] ──SSH (clave pública)──▶ [Bastión DMZ]
-                                               │
-                                 ┌─────────────┴──────────────┐
-                                 │         LinkSight          │
-                                 │                            │
-                                 │  Nuclei → Normalizador     │
-                                 │         → Ollama           │
-                                 │         → Reportes         │
-                                 └─────────────┬──────────────┘
-                                               │
-                                      HTTP/HTTPS autorizado
-                                               │
-                                               ▼
-                                    [Web objetivo autorizada]
-                                               │
-                                        Hallazgos JSON
-                                               │
-                                               ▼
-                                    [Ollama (Llama 3.2)]
-                                               │
-                                     Análisis y fixes
-                                               │
-                                               ▼
-                                      Informe PDF final
-                                               │
-                        ◀─── SCP / SFTP desde bastión ─── [Administrador]
-```
- 
-### Componentes
-
-| Componente | Tecnología | Descripción |
-|---|---|---|
-| Bastión | Alpine Linux en Proxmox | Servidor mínimo en DMZ con acceso SSH restringido |
-| Firewall | iptables | Filtrado de tráfico de entrada y salida, permitiendo únicamente los accesos y destinos autorizados |
-| Auditoría | auditd + syslog remoto | Registro centralizado de sesiones, comandos y eventos de seguridad |
-| Motor | Python 3.11 | Orquestación del análisis, procesamiento de hallazgos y generación de informes |
-| Escáner | Nuclei | Detección automatizada de vulnerabilidades web y errores de configuración |
-| LLM | Ollama (Llama 3.2) | Análisis local de hallazgos y generación de recomendaciones técnicas |
-| Informes | Markdown + WeasyPrint | Generación automática de informes profesionales en PDF |
+</div>
 
 ---
- 
-##  Estructura del proyecto
- 
-```
+
+## 🚀 Sobre el proyecto
+
+LinkSight es un proyecto para gestionar auditorías de seguridad web. La aplicación web permite crear solicitudes de análisis y guardar sus datos en MariaDB.
+
+El proyecto también incluye documentación sobre la arquitectura, el bastión y las copias de seguridad. La ejecución automática de los análisis está pendiente de conectar con un proceso que los ejecute.
+
+> LinkSight solo se debe utilizar para analizar sistemas propios o con autorización explícita de su propietario.
+
+---
+
+## 📚 Documentación
+
+| Documento | Descripción |
+|---|---|
+| [Alcance de detección](./docs/alcance.md) | Qué tipos de problemas se plantea detectar y cuáles son sus limitaciones. |
+| [Arquitectura de red](./docs/arquitectura.md) | Esquema de la red y de los equipos del proyecto. |
+| [Arquitectura de software](./docs/arquitecturasw.md) | Funcionalidades previstas para la aplicación. |
+| [LinkSight Software](./docs/LinkSightSW.md) | Documentación del software. |
+| [Modelo de amenazas](./docs/amenazas.md) | Riesgos que se tienen en cuenta en el proyecto. |
+| [Instalación del bastión](./docs/instalacion_bastion.md) | Pasos para preparar el bastión. |
+| [Hardening](./docs/hardening.md) | Configuración de seguridad del sistema. |
+| [Backups con Rclone](./docs/backups-rclone.md) | Configuración de las copias de seguridad. |
+| [Despliegue de la web](./Web/linksight/README.md) | Configuración de Docker, Nginx y MariaDB. |
+
+---
+
+## 🧰 Tecnologías
+
+| Parte | Tecnología |
+|---|---|
+| Interfaz web | HTML |
+| API | PHP |
+| Contenedores | Docker Compose |
+| Servidor web y proxy | Nginx |
+| Base de datos | MariaDB |
+
+---
+
+## 📁 Estructura del proyecto
+
+```text
 LinkSight/
-│
-├── README.md
+├── docs/                 # Documentación del proyecto
+├── img/                  # Imágenes
+├── Web/
+│   └── linksight/        # Aplicación web y archivos de despliegue
+├── Arquitectura del Software/
+├── Diseño/
 ├── CHANGELOG.md
-├── .gitignore
-├── requirements.txt
-│
-├── docs/
-│
-├── bastion/
-│   ├── setup.sh
-│   ├── sshd_config
-│   ├── iptables.rules
-│   └── audit.rules
-│
-├── linksight/
-│   ├── __init__.py
-│   ├── cli.py
-│   ├── auth.py
-│   ├── scanner.py
-│   ├── normalizer.py
-│   ├── llm_client.py
-│   └── reporter.py
-│
-├── tests/
-│   ├── test_scanner.py
-│   ├── test_normalizer.py
-│   ├── test_llm.py
-│   └── test_reporter.py
-│
-└── reports/
+└── README.md
 ```
- 
----
- 
-##  Requisitos
- 
-### En el bastión
-- Alpine Linux (mínimo)
-- Python 3.11+
-- Git
-- pandoc o weasyprint (para exportar PDF)
-- Acceso SSH configurado con clave pública
-### En local (para desarrollo y laboratorio)
-- Docker Desktop
-- Python 3.11+
-- Git
----
- 
 
-##  Fases del proyecto
- 
-| Fase | Descripción | Estado |
-|---|---|---|
-| 0 | Planificación, entorno y estructura |  En curso |
-| 1 | Servidor bastionado |  Pendiente |
-| 2 | Análisis dinámico |  Pendiente |
-| 3 | Análisis estático |  Pendiente |
-| 4 | Integración con LLM |  Pendiente |
-| 5 | Generador de informes |  Pendiente |
-| 6 | Integración final y demo |  Pendiente |
- 
 ---
- 
+
+## 🖥️ Despliegue
+
+La guía de despliegue está en [`Web/linksight/README.md`](./Web/linksight/README.md). Ahí se explica cómo preparar MariaDB y arrancar los contenedores con Docker Compose.
+
+---
+
 ## 👥 Autores
 
-- **Joel Asensio Chavarría** (@jasensioedt)
-- **Aleix Nicolás** (@aleixnic)
+- **Joel Asensio Chavarría** ([@jasensioedt](https://github.com/jasensioedt))
+- **Aleix Nicolás** ([@aleixnic](https://github.com/aleixnic))
+
 ---
- 
- 
+
+## 📫 Contacto
+
+- **GitHub:** [@jasensioedt](https://github.com/jasensioedt)
+- **Estudios:** Administración de Sistemas Informáticos en Red (ASIR)
