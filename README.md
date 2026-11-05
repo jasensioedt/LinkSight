@@ -1,12 +1,10 @@
 <div align="center">
 
-# 👋 ¡Hola! Soy Joel Asensio Chavarría
+# LinkSight
 
-### Estudiante de Administración de Sistemas Informáticos en Red (ASIR)
-
-[![GitHub](https://img.shields.io/badge/GitHub-jasensioedt-181717?style=for-the-badge&logo=github)](https://github.com/jasensioedt)
-[![Proyecto](https://img.shields.io/badge/Proyecto-LinkSight-2563EB?style=for-the-badge)](#)
-[![PHP](https://img.shields.io/badge/PHP-62.4%25-777BB4?style=for-the-badge&logo=php&logoColor=white)](#)
+[![GitHub](https://img.shields.io/badge/GitHub-jasensioedt-181717?style=for-the-badge&logo=github)](https://github.com/LinkSight)
+[![Proyecto](https://github.com/jasensioedt/LinkSight/blob/main/Web/linksight/assets/linksight_simbolo.png?raw=true)](#)
+[![PHP](https://imgs.search.brave.com/5dlJT4UvV18OuNra9a6ySpwE6w1rIozSz74b3uZmhOE/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9jZG4u/aWNvbnNjb3V0LmNv/bS9pY29uL2ZyZWUv/cG5nLTI1Ni9mcmVl/LXBocC1sb2dvLWlj/b24tc3ZnLWRvd25s/b2FkLXBuZy0zMDMy/MzUwLnBuZz9mPXdl/YnAmdz0xMjg)](#)
 
 **Proyecto de auditoría de seguridad web y administración de sistemas.**
 
@@ -45,8 +43,7 @@ El proyecto también incluye documentación sobre la arquitectura, el bastión y
 | Parte | Tecnología |
 |---|---|
 | Interfaz web | HTML |
-| API | PHP |
-| Contenedores | Docker Compose |
+| Backups | Rclone |
 | Servidor web y proxy | Nginx |
 | Base de datos | MariaDB |
 
@@ -81,7 +78,3 @@ La guía de despliegue está en [`Web/linksight/README.md`](./Web/linksight/READ
 
 ---
 
-## 📫 Contacto
-
-- **GitHub:** [@jasensioedt](https://github.com/jasensioedt)
-- **Estudios:** Administración de Sistemas Informáticos en Red (ASIR)
