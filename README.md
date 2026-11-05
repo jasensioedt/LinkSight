@@ -1,9 +1,11 @@
 <div align="center">
 
-# LinkSight
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./img/linksight_fondo_oscuro.png">
+  <img src="./img/linksight_fondo_claro.png" alt="Logo de LinkSight" width="260">
+</picture>
 
-[![GitHub](https://img.shields.io/badge/GitHub-jasensioedt-181717?style=for-the-badge&logo=github)](https://github.com/LinkSight)
-[![LinkSight](https://img.shields.io/badge/LinkSight-2563EB?style=for-the-badge)](#)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github)](https://github.com/jasensioedt/LinkSight)
 [![PHP](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white)](#)
 
 **Proyecto de auditoría de seguridad web y administración de sistemas.**
@@ -54,7 +56,7 @@ El proyecto también incluye documentación sobre la arquitectura, el bastión y
 ```text
 LinkSight/
 ├── docs/                 # Documentación del proyecto
-├── img/                  # Imágenes
+├── img/                  # Imágenes y logos
 ├── Web/
 │   └── linksight/        # Aplicación web y archivos de despliegue
 ├── Arquitectura del Software/
@@ -77,4 +79,3 @@ La guía de despliegue está en [`Web/linksight/README.md`](./Web/linksight/READ
 - **Aleix Nicolás** ([@aleixnic](https://github.com/aleixnic))
 
 ---
-
