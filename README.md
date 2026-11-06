@@ -1,9 +1,6 @@
 <div align="center">
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./img/linksight_fondo_oscuro.png">
-  <img src="./img/linksight_fondo_claro.png" alt="Logo de LinkSight" width="280">
-</picture>
+<img src="./img/linksight.png" alt="Logo de LinkSight" width="280">
 
 ### Auditoría de seguridad web y administración de sistemas
 
@@ -24,7 +21,7 @@ LinkSight es un proyecto para gestionar auditorías de seguridad web. La aplicac
 
 El repositorio también incluye documentación sobre el alcance, la arquitectura, el modelo de amenazas, el bastión, el hardening y las copias de seguridad.
 
-> **Uso responsable:** utiliza LinkSight únicamente para analizar sistemas propios o aquellos para los que tengas autorización explícita. La ejecución automática de análisis todavía no está conectada.
+> **Uso responsable:** utiliza LinkSight únicamente para analizar sistemas propios o aquellos para los que tengas autorización explícita. La ejecución automática de análisis todavía no está implementada.
 
 ## 📚 Documentación
 
