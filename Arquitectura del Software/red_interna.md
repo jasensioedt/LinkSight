@@ -5,7 +5,7 @@
 ```
 WAN (vmbr0, 192.168.111.0/24)
         |
-      eth0  (DHCP, 192.168.111.34)
+      eth0  (DHCP, 192.168.111.52)
    [ Contenedor LXC - iptables ]
       eth1  (10.10.10.1/24)
         |
@@ -70,7 +70,7 @@ netfilter-persistent save
 Desde el nodo Proxmox, que está en la misma red que `eth0`:
 
 ```
-curl http://192.168.111.34
+curl http://192.168.111.52
 ```
 
 Resultado: se devuelve la página "Welcome to nginx!" servida por la MV a través del contenedor.
