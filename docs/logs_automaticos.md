@@ -131,6 +131,4 @@ journalctl -u logdiscord_1 -f
 
 - Solo se envían las líneas añadidas después de arrancar el servicio.
 - Si un log genera muchas líneas de golpe, los mensajes se irán enviando de uno en uno por el `sleep 1`.
-- Si se usan varios archivos con un único `tail`, este inserta cabeceras `==> archivo <==` que también se enviarían; por eso se usa un script por archivo.
 - Discord limita los mensajes a 2000 caracteres; las líneas más largas fallarían.
-- Sustituir `/var/log/otro.log` por la ruta real del segundo log.
