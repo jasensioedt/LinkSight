@@ -11,7 +11,7 @@ Recibir en Discord, en tiempo real, cada línea nueva que se añade a dos archiv
 | Plataforma de mensajería | Discord (webhooks, sin necesidad de crear un bot) |
 | Lectura del log | `tail -Fn0` (solo líneas nuevas, sigue el archivo si se rota) |
 | Envío | `curl` + `jq` contra la API del webhook |
-| Ejecución permanente |  crontab con `flock` |
+| Ejecución permanente | crontab con `flock` |
 | Organización | 1 webhook + 1 script + 1 servicio por archivo de log |
 
 ## 3. Alternativas valoradas
@@ -88,13 +88,12 @@ chmod 700 /usr/local/bin/logdiscord_1.sh /usr/local/bin/logdiscord_2.sh
 ### Explicación del script
 
 - `tail -F`: sigue el archivo por nombre, aunque se rote o se recree.
-- `-n0`: no muestra las líneas existentes; solo se envían las que se añaden a partir de que arranca el script. Para enviar también las últimas N líneas al arrancar, cambiar el `0` por ese número (por ejemplo `-Fn10`).
+- `-n0`: no muestra las líneas existentes; solo se envían las que se añaden a partir de que arranca el script. Para enviar también las últimas N líneas al arrancar, cambiar el `0` por ese número (por ejemplo, `-Fn10`).
 - `[ -z "$line" ] && continue`: ignora líneas vacías.
 - `jq -n --arg`: construye el JSON escapando correctamente comillas y caracteres especiales.
 - `hostname`: antepone el nombre del servidor al mensaje.
 - `sleep 1`: evita superar el límite de velocidad de la API.
 - Límite de Discord: 2000 caracteres por mensaje.
-
 
 ## 7. Tarea crontab
 
@@ -115,11 +114,9 @@ pgrep -af logdiscord
 
 ## 8. Comprobación
 
-
+![Ejemplo de logs de backup](./img/log_backups.png)
 
 Cada mensaje debe aparecer en su canal de Discord en aproximadamente un segundo.
-
-
 
 ## 10. Comandos de gestión
 
