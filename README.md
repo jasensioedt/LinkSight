@@ -5,9 +5,9 @@
 ### Auditoría de seguridad web y administración de sistemas
 
 [![PHP](https://img.shields.io/badge/PHP-777BB4?style=flat-square&logo=php&logoColor=white)](https://www.php.net/)
-[![Nginx](https://img.shields.io/badge/Nginx-009639?style=flat-square&logo=nginx&logoColor=white)](#)
-[![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=flat-square&logo=mariadb&logoColor=white)](#)
-[![Rclone](https://img.shields.io/badge/Rclone-5575AA?style=flat-square)](#)
+[![Nginx](https://img.shields.io/badge/Nginx-009639?style=flat-square&logo=nginx&logoColor=white)](https://nginx.org/)
+[![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=flat-square&logo=mariadb&logoColor=white)](https://mariadb.org/)
+[![Rclone](https://img.shields.io/badge/Rclone-5575AA?style=flat-square)](https://rclone.org/)
 
 **Una aplicación web para gestionar solicitudes de auditoría y centralizar la documentación del proyecto.**
 
