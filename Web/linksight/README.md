@@ -2,7 +2,7 @@
 
 Despliegue para la topología actual de Proxmox:
 
-- Host de Docker y Nginx: `10.10.10.2`
+- Host de Nginx: `10.10.10.2`
 - MariaDB: `10.10.10.3:3306`
 - Nginx sirve el frontend en el puerto `8080` y envía `/api/` al contenedor PHP por la red privada de Compose.
 - El contenedor PHP no publica ningún puerto al exterior; se conecta directamente a MariaDB.
@@ -41,7 +41,7 @@ Si un proxy TLS de confianza termina HTTPS antes de llegar al contenedor Nginx, 
 
 - `compose.yaml`: solo los contenedores `frontend` (Nginx) y `api` (PHP/Apache); no crea otra base de datos.
 - `nginx/default.conf`: archivos estáticos, cabeceras y proxy de `/api/` hacia `api:80`.
-- `Dockerfile`, `api/index.php`, `php-security.ini`: API PHP conectada a MariaDB externa.
+- `api/index.php`, `php-security.ini`: API PHP conectada a MariaDB externa.
 - `index.html`, `assets/`: frontend y recursos de LinkSight.
 
 La API crea solicitudes de análisis como `pendiente`. El esquema SQL no incluye un worker que ejecute escaneos; antes de conectarlo, limita destinos privados/internos y valida redirecciones para evitar SSRF.
