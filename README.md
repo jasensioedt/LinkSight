@@ -29,14 +29,14 @@ El repositorio también incluye documentación sobre el alcance, la arquitectura
 |---|---|
 | [Alcance de detección](./docs/alcance.md) | Objetivos, tipos de problemas contemplados y limitaciones. |
 | [Arquitectura de red](./docs/arquitectura.md) | Diseño de red y equipos del proyecto. |
-| [Arquitectura del software](./Arquitectura%20del%20Software/ArquitecturaSW.md) | Documentación de la arquitectura del software. |
-| [Red interna con LXC + iptables](./Arquitectura%20del%20Software/red_interna.md) | Diseño de la red interna, NAT y reenvío de tráfico entre el contenedor LXC y la MV Nginx. |
 | [Modelo de amenazas](./docs/amenazas.md) | Riesgos considerados en el proyecto. |
-| [Instalación del bastión](./docs/instalacion_bastion.md) | Preparación del bastión. |
-| [Logs automáticos de Proxmox a Discord](./docs/logs_automaticos.md) | Notificaciones automáticas de los logs de backup mediante webhooks de Discord. |
 | [Hardening](./docs/hardening.md) | Medidas de configuración segura. |
-| [Copias de seguridad con Rclone](./docs/backups-rclone.md) | Documentación de las copias de seguridad. |
+| [Instalación del bastión](./docs/instalacion_bastion.md) | Preparación del bastión. |
 | [Despliegue de la aplicación](./Web/linksight/README.md) | Documentación técnica del despliegue y la configuración de la aplicación. |
+| [Arquitectura del software](./Arquitectura%20del%20Software/ArquitecturaSW.md) | Documentación de la arquitectura del software. |
+| [Copias de seguridad con Rclone](./docs/backups-rclone.md) | Documentación de las copias de seguridad. |
+| [Red interna con LXC + iptables](./Arquitectura%20del%20Software/red_interna.md) | Diseño de la red interna, NAT y reenvío de tráfico entre el contenedor LXC y la MV Nginx. |
+| [Logs automáticos de Proxmox a Discord](./docs/logs_automaticos.md) | Notificaciones automáticas de los logs de backup mediante webhooks de Discord. |
 
 ## 🧰 Tecnologías
 
