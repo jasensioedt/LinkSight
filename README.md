@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./img/linksight.png" alt="Logo de LinkSight" width="280">
+<img src="./img/linksight.png" alt="Logo de LinkSight" width="380">
 
 ### Auditoría de seguridad web y administración de sistemas
 
