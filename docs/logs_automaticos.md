@@ -2,7 +2,7 @@
 
 ## 1. Objetivo
 
-Recibir en Discord, en tiempo real, cada línea nueva que se añade a dos archivos de log de Proxmox (por ejemplo, los generados por los scripts de backup). Cada archivo se envía a un canal distinto mediante su propio webhook.
+Recibir en Discord, en tiempo real, cada línea nueva que se añade a dos archivos de log generados por los scripts de backup. Cada archivo se envía a un canal distinto mediante su propio webhook.
 
 ## 2. Resumen de la solución
 
@@ -11,7 +11,7 @@ Recibir en Discord, en tiempo real, cada línea nueva que se añade a dos archiv
 | Plataforma de mensajería | Discord (webhooks, sin necesidad de crear un bot) |
 | Lectura del log | `tail -Fn0` (solo líneas nuevas, sigue el archivo si se rota) |
 | Envío | `curl` + `jq` contra la API del webhook |
-| Ejecución permanente | Servicio systemd (alternativa: crontab con `flock`) |
+| Ejecución permanente |  crontab con `flock` |
 | Organización | 1 webhook + 1 script + 1 servicio por archivo de log |
 
 ## 3. Alternativas valoradas
@@ -42,7 +42,7 @@ apt update && apt install -y curl jq
 ### Log 1
 
 ```bash
-nano /usr/local/bin/log2discord_1.sh
+nano /usr/local/bin/logdiscord_1.sh
 ```
 
 ```bash
@@ -62,7 +62,7 @@ done
 ### Log 2
 
 ```bash
-nano /usr/local/bin/log2discord_2.sh
+nano /usr/local/bin/logdiscord_2.sh
 ```
 
 ```bash
@@ -82,7 +82,7 @@ done
 ### Permisos
 
 ```bash
-chmod 700 /usr/local/bin/log2discord_1.sh /usr/local/bin/log2discord_2.sh
+chmod 700 /usr/local/bin/logdiscord_1.sh /usr/local/bin/logdiscord_2.sh
 ```
 
 ### Explicación del script
@@ -95,85 +95,14 @@ chmod 700 /usr/local/bin/log2discord_1.sh /usr/local/bin/log2discord_2.sh
 - `sleep 1`: evita superar el límite de velocidad de la API.
 - Límite de Discord: 2000 caracteres por mensaje.
 
-## 7. Servicios systemd (método elegido)
 
-### Por qué systemd
-
-El script con `tail -F` se ejecuta indefinidamente. Con systemd se obtiene:
-
-- Arranque automático al iniciar el servidor.
-- Reinicio automático si el script falla (`Restart=always`).
-- Ejecución en segundo plano, sin depender de una sesión SSH.
-- Gestión con `systemctl` y consulta de logs con `journalctl`.
-
-### Servicio 1
-
-```bash
-nano /etc/systemd/system/log2discord_1.service
-```
-
-```ini
-[Unit]
-Description=Enviar log 1 a Discord
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-ExecStart=/usr/local/bin/log2discord_1.sh
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-```
-
-### Servicio 2
-
-```bash
-nano /etc/systemd/system/log2discord_2.service
-```
-
-```ini
-[Unit]
-Description=Enviar log 2 a Discord
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-ExecStart=/usr/local/bin/log2discord_2.sh
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-```
-
-### Activación
-
-```bash
-systemctl daemon-reload
-systemctl enable --now log2discord_1.service log2discord_2.service
-systemctl status log2discord_1.service log2discord_2.service
-```
-
-## 8. Alternativa con crontab
-
-### Solo al arrancar
-
-```bash
-crontab -e
-```
-
-```cron
-@reboot /usr/local/bin/log2discord_1.sh >/dev/null 2>&1
-@reboot /usr/local/bin/log2discord_2.sh >/dev/null 2>&1
-```
+## 7. Tarea crontab
 
 ### Al arrancar y relanzando si se cae
 
 ```cron
-* * * * * flock -n /tmp/log2discord_1.lock /usr/local/bin/log2discord_1.sh >/dev/null 2>&1
-* * * * * flock -n /tmp/log2discord_2.lock /usr/local/bin/log2discord_2.sh >/dev/null 2>&1
+* * * * * flock -n /tmp/logdiscord_1.lock /usr/local/bin/logdiscord_1.sh >/dev/null 2>&1
+* * * * * flock -n /tmp/logdiscord_2.lock /usr/local/bin/logdiscord_2.sh >/dev/null 2>&1
 ```
 
 `flock -n` impide lanzar una segunda instancia si ya hay una en ejecución.
@@ -181,41 +110,24 @@ crontab -e
 ### Comprobar que está corriendo
 
 ```bash
-pgrep -af log2discord
+pgrep -af logdiscord
 ```
 
-### Diferencias respecto a systemd
+## 8. Comprobación
 
-| | systemd | crontab |
-|---|---|---|
-| Reinicio tras caída | ~5 segundos | hasta 1 minuto |
-| Estado y logs | `systemctl status`, `journalctl` | no disponible |
-| Complejidad | Media | Baja |
 
-## 9. Pruebas
-
-```bash
-echo "prueba 1" >> /var/log/backup_linksight.log
-echo "prueba 2" >> /var/log/otro.log
-```
 
 Cada mensaje debe aparecer en su canal de Discord en aproximadamente un segundo.
 
-Para que los scripts propios de backup envíen sus logs, deben escribir añadiendo al archivo vigilado:
 
-```bash
-echo "$(date) backup terminado" >> /var/log/backup_linksight.log
-```
-
-Si un script solo imprime por pantalla y no escribe en el archivo, no se enviará nada.
 
 ## 10. Comandos de gestión
 
 ```bash
-systemctl status log2discord_1
-systemctl restart log2discord_1
-systemctl stop log2discord_1
-journalctl -u log2discord_1 -f
+systemctl status logdiscord_1
+systemctl restart logdiscord_1
+systemctl stop logdiscord_1
+journalctl -u logdiscord_1 -f
 ```
 
 ## 11. Notas y limitaciones
