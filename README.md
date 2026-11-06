@@ -18,7 +18,7 @@
 
 LinkSight es un proyecto para gestionar auditorías de seguridad web. La aplicación web permite crear solicitudes de análisis y guardar sus datos en MariaDB.
 
-El proyecto también incluye documentación sobre la arquitectura, el bastión y las copias de seguridad. La ejecución automática de los análisis está pendiente de conectar con un proceso que los ejecute.
+El proyecto también incluye documentación sobre la arquitectura, el bastión y las copias de seguridad. La ejecución automática de los análisis está pendiente de conectar con un proceso que los lleve a cabo.
 
 > LinkSight solo se debe utilizar para analizar sistemas propios o con autorización explícita de su propietario.
 
@@ -30,7 +30,7 @@ El proyecto también incluye documentación sobre la arquitectura, el bastión y
 |---|---|
 | [Alcance de detección](./docs/alcance.md) | Qué tipos de problemas se plantea detectar y cuáles son sus limitaciones. |
 | [Arquitectura de red](./docs/arquitectura.md) | Esquema de la red y de los equipos del proyecto. |
-| [LinkSight Software](./Arquitectura_SW/ArquitecturaSW.md) | Documentación del software. |
+| [LinkSight Software](./Arquitectura%20del%20Software/ArquitecturaSW.md) | Documentación del software. |
 | [Modelo de amenazas](./docs/amenazas.md) | Riesgos que se tienen en cuenta en el proyecto. |
 | [Instalación del bastión](./docs/instalacion_bastion.md) | Pasos para preparar el bastión. |
 | [Hardening](./docs/hardening.md) | Configuración de seguridad del sistema. |
