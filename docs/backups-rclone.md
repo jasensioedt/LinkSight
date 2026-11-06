@@ -46,7 +46,7 @@ Desde el contenedor `linksightBKP` automatizamos la copia de los datos con un sc
 
 1. **Volcado de las bases de datos por red** con `mysqldump` (todas las bases, sin bloquear tablas gracias a `--single-transaction`).
 2. **Copia de la web** con `rsync` por SSH desde `10.10.10.2`.
-3. **Subida a MEGA** con `rclone sync`, que deja la carpeta `CopiasProxmox` de MEGA como un espejo de la carpeta local `/root/backup_linksight/`.
+3. **Subida a MEGA** con `rclone sync`, que deja la carpeta `CopiasDatos` de MEGA como un espejo de la carpeta local `/root/backup_linksight/`.
 
 ```bash
 #!/bin/bash
@@ -58,7 +58,7 @@ mysqldump -h 10.10.10.3 -u backup -p'CONTRASEÑA' --all-databases --single-trans
 
 rsync -avz --delete root@10.10.10.2:/var/www/html/ /root/backup_linksight/web/
 
-rclone sync /root/backup_linksight/ mega:CopiasProxmox
+rclone sync /root/backup_linksight/ mega:CopiasDatos
 ```
 
 Detalles del script:
@@ -122,7 +122,7 @@ Programamos las tareas para que se hagan de madrugada: la copia de datos todos l
 | Hora | Qué se hace | Dónde |
 |------|-------------|-------|
 | 02:00 cada dia | Backup de las máquinas "importantes" (Web/BD) a `/var/lib/vz/dump` | Interfaz web de Proxmox |
-| 03:00 cada dia | Copia de datos (base de datos y web) a `CopiasProxmox` | Crontab del contenedor |
+| 03:00 cada dia | Copia de datos (base de datos y web) a `CopiasDatos` | Crontab del contenedor |
 | 04:00 cada lunes | Backup de todas las máquinas a `/var/lib/vz/dump` | Interfaz web de Proxmox |
 | 05:00 cada lunes | Subida de los backups de las máquinas a `CopiasCompletas` en MEGA | Crontab del contenedor |
 
