@@ -1,8 +1,7 @@
 -- =====================================================================
 --  LinkSight · Base de datos de la aplicación web
 --  Motor: MySQL 5.7+ / 8.x o MariaDB 10.4+ (InnoDB, utf8mb4)
---  Ejecutar en VM-BD (192.168.50.20) como administrador de MySQL:
---      mysql -u root -p < linksight.sql
+--  Migración 001. Se aplica con scripts/migrate.sh (docker compose up).
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
@@ -15,8 +14,12 @@ CREATE DATABASE IF NOT EXISTS linksight
 USE linksight;
 
 -- ---------------------------------------------------------------------
--- El usuario de aplicacion se crea con MYSQL_USER y MYSQL_PASSWORD en el despliegue.
+-- 2. Usuario de la aplicación
+--    Lo crea Docker con MYSQL_USER / MYSQL_PASSWORD y scripts/migrate.sh
+--    le deja solo SELECT, INSERT, UPDATE, DELETE (mínimo privilegio).
+-- ---------------------------------------------------------------------
 
+-- ---------------------------------------------------------------------
 -- 3. Personas y acceso
 -- ---------------------------------------------------------------------
 CREATE TABLE roles (

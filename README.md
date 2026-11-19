@@ -1,150 +1,47 @@
-#  LinkSight
- 
-> Plataforma de auditoría de vulnerabilidades web con acceso bastionado.  
-> Detecta, analiza y reporta vulnerabilidades en aplicaciones web de forma automatizada, ejecutándose desde un servidor bastionado en DMZ para garantizar trazabilidad y seguridad operacional.
- 
----
- 
-##  Aviso legal
- 
-**Esta herramienta está diseñada exclusivamente para ser usada con autorización explícita y por escrito del propietario del sistema objetivo.**
- 
-El uso de LinkSight contra sistemas sin autorización es ilegal y puede constituir un delito informático según el artículo 197 bis del Código Penal español. Los autores no se responsabilizan del uso indebido de esta herramienta.
- 
-Antes de ejecutar cualquier análisis, el sistema exige un fichero de autorización firmado (`auth.json`). Sin él, la herramienta no arranca.
- 
----
- 
-##  ¿Qué es LinkSight?
- 
-LinkSight es una herramienta de auditoría de seguridad web que combina:
+# LinkSight
 
-- **Reconocimiento pasivo** — análisis de cabeceras HTTP, cookies, certificados TLS y tecnologías expuestas
-- **Detección automatizada de vulnerabilidades** — análisis mediante Nuclei para identificar errores de configuración, exposiciones de información y vulnerabilidades conocidas
-- **Normalización de hallazgos** — procesamiento y unificación de resultados en un formato estándar
-- **Análisis mediante IA** — enriquecimiento de hallazgos con Ollama (Llama 3.2), incluyendo explicación del riesgo y recomendaciones de mitigación
-- **Generación de informes** — creación automática de informes técnicos en PDF listos para entregar al cliente
+Despliegue para la topología actual de Proxmox:
 
-Todo el análisis se ejecuta desde un **servidor bastionado en DMZ** con acceso SSH restringido, registro de auditoría y firewall de salida controlado.
- 
----
- 
-##  Arquitectura
- 
+- Host de Nginx: `10.10.10.2`
+- MariaDB: `10.10.10.3:3306`
+- Nginx sirve el frontend en el puerto `8080` y envía `/api/` al contenedor PHP por la red privada de Compose.
+- El contenedor PHP no publica ningún puerto al exterior; se conecta directamente a MariaDB.
+
+## Preparar MariaDB
+
+Importa una sola vez `database/init/001-schema.sql` en el CT de base de datos si todavía no has creado las tablas. En una instalación existente, aplica también `database/init/002-profile-drafts-demo.sql` una sola vez; añade las notas de análisis y las tablas de borradores e informes simulados. En una base nueva, importa ambos archivos en orden. El SQL original está conservado en `database/source-schema.sql`; no lo importes además del esquema adaptado.
+
+En MariaDB crea un usuario limitado al host Docker `10.10.10.2`. Usa como contraseña el valor de `DB_PASSWORD` en `.env`:
+
+```sql
+CREATE USER 'linksight_app'@'10.10.10.2' IDENTIFIED BY 'MISMA_CLAVE_QUE_EN_ENV';
+GRANT SELECT, INSERT, UPDATE, DELETE ON linksight.* TO 'linksight_app'@'10.10.10.2';
+FLUSH PRIVILEGES;
 ```
-[Administrador] ──SSH (clave pública)──▶ [Bastión DMZ]
-                                               │
-                                 ┌─────────────┴──────────────┐
-                                 │         LinkSight          │
-                                 │                            │
-                                 │  Nuclei → Normalizador     │
-                                 │         → Ollama           │
-                                 │         → Reportes         │
-                                 └─────────────┬──────────────┘
-                                               │
-                                      HTTP/HTTPS autorizado
-                                               │
-                                               ▼
-                                    [Web objetivo autorizada]
-                                               │
-                                        Hallazgos JSON
-                                               │
-                                               ▼
-                                    [Ollama (Llama 3.2)]
-                                               │
-                                     Análisis y fixes
-                                               │
-                                               ▼
-                                      Informe PDF final
-                                               │
-                        ◀─── SCP / SFTP desde bastión ─── [Administrador]
+
+MariaDB debe escuchar en la IP `192.168.111.49` y el firewall debe permitir el puerto `3306` desde `10.10.10.2`. Comprueba también que haya ruta entre esos dos hosts. No abras el puerto a toda la red. Con la red bridge normal de Docker, MariaDB suele ver como origen la IP del host Docker; si el firewall registra otra IP, crea el usuario para esa IP concreta en vez de usar `%`.
+
+## Configurar y arrancar en `10.10.10.2`
+
+Copia la carpeta `linksight` al host `10.10.10.2`, incluyendo `.env` de forma privada. Si aún no tienes `.env`, copia `.env.example`. Comprueba que `DB_HOST`, `DB_USER` y `DB_PASSWORD` coincidan con MariaDB. La plantilla ya apunta a `192.168.111.49`.
+
+Desde esa carpeta ejecuta:
+
+```sh
+docker compose pull frontend
+docker compose build --pull api
+docker compose up -d
 ```
- 
-### Componentes
 
-| Componente | Tecnología | Descripción |
-|---|---|---|
-| Bastión | Alpine Linux en Proxmox | Servidor mínimo en DMZ con acceso SSH restringido |
-| Firewall | iptables | Filtrado de tráfico de entrada y salida, permitiendo únicamente los accesos y destinos autorizados |
-| Auditoría | auditd + syslog remoto | Registro centralizado de sesiones, comandos y eventos de seguridad |
-| Motor | Python 3.11 | Orquestación del análisis, procesamiento de hallazgos y generación de informes |
-| Escáner | Nuclei | Detección automatizada de vulnerabilidades web y errores de configuración |
-| LLM | Ollama (Llama 3.2) | Análisis local de hallazgos y generación de recomendaciones técnicas |
-| Informes | Markdown + WeasyPrint | Generación automática de informes profesionales en PDF |
+La web quedará en `http://10.10.10.2:8080`. Si el puerto `8080` ya está ocupado, cambia `WEB_PORT` en `.env`. La API solo se alcanza mediante el proxy Nginx como `/api/...`.
 
----
- 
-##  Estructura del proyecto
- 
-```
-LinkSight/
-│
-├── README.md
-├── CHANGELOG.md
-├── .gitignore
-├── requirements.txt
-│
-├── docs/
-│
-├── bastion/
-│   ├── setup.sh
-│   ├── sshd_config
-│   ├── iptables.rules
-│   └── audit.rules
-│
-├── linksight/
-│   ├── __init__.py
-│   ├── cli.py
-│   ├── auth.py
-│   ├── scanner.py
-│   ├── normalizer.py
-│   ├── llm_client.py
-│   └── reporter.py
-│
-├── tests/
-│   ├── test_scanner.py
-│   ├── test_normalizer.py
-│   ├── test_llm.py
-│   └── test_reporter.py
-│
-└── reports/
-```
- 
----
- 
-##  Requisitos
- 
-### En el bastión
-- Alpine Linux (mínimo)
-- Python 3.11+
-- Git
-- pandoc o weasyprint (para exportar PDF)
-- Acceso SSH configurado con clave pública
-### En local (para desarrollo y laboratorio)
-- Docker Desktop
-- Python 3.11+
-- Git
----
- 
+Si un proxy TLS de confianza termina HTTPS antes de llegar al contenedor Nginx, establece `APP_FORCE_HTTPS=true`; para acceso HTTP directo déjalo en `false`.
 
-##  Fases del proyecto
- 
-| Fase | Descripción | Estado |
-|---|---|---|
-| 0 | Planificación, entorno y estructura |  En curso |
-| 1 | Servidor bastionado |  Pendiente |
-| 2 | Análisis dinámico |  Pendiente |
-| 3 | Análisis estático |  Pendiente |
-| 4 | Integración con LLM |  Pendiente |
-| 5 | Generador de informes |  Pendiente |
-| 6 | Integración final y demo |  Pendiente |
- 
----
- 
-## 👥 Autores
+## Qué incluye
 
-- **Joel Asensio Chavarría** (@jasensioedt)
-- **Aleix Nicolás** (@aleixnic)
----
- 
- 
+- `compose.yaml`: solo los contenedores `frontend` (Nginx) y `api` (PHP/Apache); no crea otra base de datos.
+- `nginx/default.conf`: archivos estáticos, cabeceras y proxy de `/api/` hacia `api:80`.
+- `api/index.php`, `php-security.ini`: API PHP conectada a MariaDB externa.
+- `index.html`, `assets/`: frontend y recursos de LinkSight.
+
+La API crea solicitudes de análisis como `pendiente`. El esquema SQL no incluye un worker que ejecute escaneos; antes de conectarlo, limita destinos privados/internos y valida redirecciones para evitar SSRF.
