@@ -314,9 +314,17 @@ if ($action === 'avatar' && in_array($method, ['POST','DELETE'], true)) {
 }
 
 if ($action === 'drafts' && $method === 'GET') {
-    $admin = isAdmin($pdo, $userId);
-    $sql = 'SELECT d.id_borrador,d.id_usuario,d.url,d.tipo,d.notas,d.progreso,d.estado,d.id_analisis,d.creado_en,d.actualizado_en FROM borradores_analisis d' . ($admin ? '' : ' WHERE d.id_usuario=?') . ' ORDER BY d.actualizado_en DESC';
-    $q = $pdo->prepare($sql); $q->execute($admin ? [] : [$userId]); respond(['ok'=>true,'items'=>$q->fetchAll()]);
+    try {
+        $admin = isAdmin($pdo, $userId);
+        $sql = 'SELECT d.id_borrador,d.id_usuario,d.url,d.tipo,d.notas,d.progreso,d.estado,d.id_analisis,d.creado_en,d.actualizado_en FROM borradores_analisis d' . ($admin ? '' : ' WHERE d.id_usuario=?') . ' ORDER BY d.actualizado_en DESC';
+        $q = $pdo->prepare($sql); $q->execute($admin ? [] : [$userId]); respond(['ok'=>true,'items'=>$q->fetchAll()]);
+    } catch (PDOException $e) {
+        error_log('LinkSight drafts listing failed: ' . $e->getMessage());
+        if (in_array((string)$e->getCode(), ['42S02','42S22'], true)) {
+            fail('La base de datos no tiene la migración de borradores. Aplica 002_profile_drafts_demo.sql y vuelve a cargar la página.', 503);
+        }
+        fail('No se pudieron cargar los borradores. Revisa los registros de la API.', 500);
+    }
 }
 
 if ($action === 'drafts' && $method === 'POST') {
