@@ -36,6 +36,7 @@ El repositorio también incluye documentación sobre el alcance, la arquitectura
 | [Logs automáticos de Proxmox a Discord](./docs/logs_automaticos.md) | Notificaciones automáticas de los logs de backup mediante webhooks de Discord. |
 | [Hardening](./docs/hardening.md) | Medidas de configuración segura. |
 | [Copias de seguridad con Rclone](./docs/backups-rclone.md) | Documentación de las copias de seguridad. |
+| [Monitorización con Grafana y Prometheus](./docs/monitorizacion.md) | Monitorización de los recursos de Proxmox y estadísticas del firewall iptables (paquetes bloqueados, DNAT y tráfico). |
 | [Instalación del bastión](./docs/instalacion_bastion.md) | Preparación del bastión. |
 | [Despliegue de la aplicación](./Web/linksight/README.md) | Documentación técnica del despliegue y la configuración de la aplicación. |
 | [Arquitectura del software](./Arquitectura%20del%20Software/ArquitecturaSW.md) | Documentación de la arquitectura del software. |
