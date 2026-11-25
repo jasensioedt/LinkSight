@@ -45,6 +45,21 @@
     @media(max-width:760px){.hero{min-height:0;padding:54px 20px 45px;gap:30px}.hero h1{font-size:clamp(42px,10vw,56px)}.site-header{background:rgba(8,7,14,.96)}}
     @media(prefers-reduced-motion:reduce){.site-nav a{transition:none}}
 
+
+    /* Landing refinements and mouse interaction */
+    .hero{min-height:600px;padding-top:64px;padding-bottom:66px;gap:54px}
+    a,button,video[controls]{cursor:pointer}
+    .site-nav a,.site-header .brand,.hero-visual,.btn,.feature,.process-card,.promo-video-frame{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease,color .2s ease,filter .2s ease}
+    .site-nav a:hover{color:#d0b6ff;text-shadow:0 0 16px rgba(171,129,255,.38)}
+    .hero-visual:hover{transform:translateY(-4px);border-color:#694b91;box-shadow:0 30px 85px rgba(0,0,0,.48),0 0 40px rgba(123,76,205,.15)}
+    .btn:hover{transform:translateY(-2px);filter:brightness(1.12);box-shadow:0 10px 28px rgba(128,77,238,.34)}
+    .btn:active{transform:scale(.97);filter:brightness(.95)}
+    .feature:hover,.process-card:hover{transform:translateY(-3px);border-color:#64478d;box-shadow:0 14px 36px rgba(0,0,0,.32)}
+    .promo-video-frame:hover{border-color:#8054c7;box-shadow:0 0 34px rgba(123,76,205,.22)}
+    a:focus-visible,button:focus-visible,video:focus-visible{outline:2px solid #bb9aff;outline-offset:3px;border-radius:7px}
+    @media(max-width:760px){.hero{min-height:0;padding-top:45px;padding-bottom:42px}}
+    @media(prefers-reduced-motion:reduce){.site-nav a,.site-header .brand,.hero-visual,.btn,.feature,.process-card,.promo-video-frame{transition:none}}
+
   </style>
 </head>
 <body>
